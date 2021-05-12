@@ -16,6 +16,7 @@ public class SyncTranform : LexNetwork_SyncVar
         if (isWriting)
         {
             if (transform.position == oldPos) return;
+            oldPos = transform.position;
             PushSync(new DataType[] { DataType.VECTOR3 }, transform.position);
         }
         else {

@@ -8,7 +8,7 @@ public class LexMessage
 }
 
 public enum MessageInfo {
-    ServerCallbacks, RPC,SyncVar,Chat,Instantiate,Destroy,SetHash, ServerRequest
+    ServerRequest, RPC,SyncVar,Chat,Instantiate,Destroy,SetHash, ServerCallbacks
 }
 public enum LexCallback
 {
