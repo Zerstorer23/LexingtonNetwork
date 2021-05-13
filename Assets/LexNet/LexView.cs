@@ -5,7 +5,7 @@ using UnityEngine;
 [ExecuteAlways]
 public class LexView : MonoBehaviour
 {
-    private int prViewID = -1;
+   [SerializeField] private int prViewID = -1;
    public int ViewID
     {
         get { return prViewID; }
@@ -51,10 +51,15 @@ public class LexView : MonoBehaviour
     private void Awake()
     {
         serializedView = GetComponent<LexNetwork_SyncVar>();
-        if (IsSceneView) {
-            prViewID = LexNetwork.instance.RequestRoomViewID();
+        if (!Application.isPlaying && prViewID ==-1) {
+            prViewID = LexNetwork_ViewID_Manager.RequestRoomViewID();
             IsMine = true;
+            LexNetwork.AddViewtoDictionary(this);
         }
+    }
+    private void Start()
+    {
+        
     }
 
     public void ReceiveSerializedVariable(params object[] parameters) {
@@ -73,7 +78,7 @@ public class LexView : MonoBehaviour
         this.ownerActorNr = ownerID;
         this.creatorActorNr = creatorID;
         this.IsRoomView = roomview;
-
+        this.IsSceneView = false;
         if (IsRoomView)
         {
             IsMine = LexNetwork.IsMasterClient;

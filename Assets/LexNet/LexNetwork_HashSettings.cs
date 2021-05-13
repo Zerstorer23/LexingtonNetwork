@@ -4,20 +4,20 @@ using UnityEngine;
 
 public class LexNetwork_HashSettings 
 {
- public  Dictionary<string, object> RoomHash { get; private set; }
+ public  Dictionary<RoomProperty, string> RoomHash { get; private set; }
 
    public LexNetwork_HashSettings() {
-        RoomHash = new Dictionary<string, object>();   
+        RoomHash = new Dictionary<RoomProperty, string>();   
     }
 
-    public object GetRoomSetting(string key, object defaultValue) {
+    public object GetRoomSetting(RoomProperty key, string defaultValue) {
         if (!RoomHash.ContainsKey(key))
         {
             RoomHash.Add(key, defaultValue);
         }
         return RoomHash[key];
     }
-    public void SetRoomSetting(string key, object value) {
+    public void SetRoomSetting(RoomProperty key, string value) {
         if (!RoomHash.ContainsKey(key))
         {
             RoomHash.Add(key, value);

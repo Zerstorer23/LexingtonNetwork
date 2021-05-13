@@ -11,6 +11,6 @@ public class LobbyManager : MonobehaviourLexCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
-
+        Debug.Log("Join successful");
     }
 }

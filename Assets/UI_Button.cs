@@ -26,4 +26,16 @@ public class UI_Button : MonoBehaviour
     {
         LexNetwork.InstantiateRoomObject("netObj", transform.position, Quaternion.identity);
     }
+    public void OnClick_InstantiatePrivate()
+    {
+        LexNetwork.Instantiate("netObj", transform.position, Quaternion.identity);
+    }
+    public void OnClick_RoomHash()
+    {
+        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100)+"");
+    }
+    public void OnClick_PlayerHash()
+    {
+        LexNetwork.SetPlayerCustomProperties(LexNetwork.LocalPlayer.actorID, PlayerProperty.NickName, Random.Range(0, 100) + "");
+    }
 }

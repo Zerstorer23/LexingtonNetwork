@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System;
 using static LexNetworkConnection;
-[ExecuteAlways]
 public class LexNetwork : MonoBehaviour
 {
     private static Dictionary<int, LexView> viewDictionary = new Dictionary<int, LexView>();
@@ -22,14 +21,13 @@ public class LexNetwork : MonoBehaviour
     public static string NickName { get; private set; }
 //    public static NetPlayer[] playerList;
     public static double Time { get; private set; }
+    public static bool IsConnected { get; private set; }
     public static bool IsMasterClient { get; private set; }
     public static int countOfPlayersInRoom;
 
     static LexNetworkConnection networkConnector = new LexNetworkConnection();
     private static LexNetwork prNetwork;
 
-    [SerializeField] private int privateViewID = 0;
-    [SerializeField] private int roomViewID = 0;
     public static LexNetwork_HashSettings CustomProperty { get; private set; } = new LexNetwork_HashSettings();
 
     public static LexNetwork instance
@@ -52,16 +50,25 @@ public class LexNetwork : MonoBehaviour
         }
     }
     public static bool ConnectUsingSettings() {
-        bool success = networkConnector.Connect();
         //TODO
         //1 소켓 연결
+        if (IsConnected) return false;
+        bool success = networkConnector.Connect();
+        if (!success) return false;
         //2 연결 성공시 Request(플레이어 정보, 해시정보 로드
+        instance.RequestConnectedPlayerInformation();
         //3.해시로드callback받기
         //4. Request Buffered RPC
         Debug.Log("Connection..."+success);
         return success;
     }
-  
+
+    private void RequestConnectedPlayerInformation()
+    {
+        string message = BuildFormat("-1", (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
+        networkConnector.EnqueueAMessage(message);
+    }
+
     public static bool Reconnect() {
         return true;
     }
@@ -76,6 +83,13 @@ public class LexNetwork : MonoBehaviour
         return 0;
 
     }
+
+    internal void SetConnected(bool v)
+    {
+        Debug.Log("Connected : " + v);
+        IsConnected = v;
+    }
+
     public static int AllocateSceneViewID() {
 
         return 0;
@@ -93,7 +107,7 @@ public class LexNetwork : MonoBehaviour
             go = GameObject.Instantiate((GameObject)Resources.Load(prefabName), position, quaternion);
         }
         LexView lv = go.GetComponent<LexView>();
-        lv.SetInformation(instance.RequestPrivateViewID(), LocalPlayer.actorID, LocalPlayer.actorID, false);
+        lv.SetInformation(LexNetwork_ViewID_Manager.RequestPrivateViewID(), LocalPlayer.actorID, LocalPlayer.actorID, false);
         Debug.Log("Instnatiate view id " + lv.ViewID);
         AddViewtoDictionary(lv);
         instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, parentView, null);
@@ -105,7 +119,7 @@ public class LexNetwork : MonoBehaviour
         GameObject go = GameObject.Instantiate((GameObject)Resources.Load(prefabName), position, quaternion);
         LexView lv = go.GetComponent<LexView>();
         lv.SetInstantiateData(parameters);
-        lv.SetInformation(instance.RequestPrivateViewID(), LocalPlayer.actorID, LocalPlayer.actorID, false);
+        lv.SetInformation(LexNetwork_ViewID_Manager.RequestPrivateViewID(), LocalPlayer.actorID, LocalPlayer.actorID, false);
         AddViewtoDictionary(lv);
         instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, null, dataTypes,parameters);
         return go;
@@ -141,7 +155,7 @@ public class LexNetwork : MonoBehaviour
             go = GameObject.Instantiate((GameObject)Resources.Load(prefabName), position, quaternion);
         }
         LexView lv = go.GetComponent<LexView>();
-        lv.SetInformation(instance.RequestRoomViewID(), MasterClient.actorID, LocalPlayer.actorID, true);
+        lv.SetInformation(LexNetwork_ViewID_Manager.RequestRoomViewID(), MasterClient.actorID, LocalPlayer.actorID, true);
         Debug.Log("Instnatiate view id " + lv.ViewID);
         AddViewtoDictionary(lv);
         instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, parentView, null);
@@ -305,12 +319,7 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
 
  */
 
-    private void Awake()
-    {
-        LocalPlayer = new NetPlayer(true, 1, "LOCAL");
-        viewDictionary.Add(testView.ViewID, testView);
-    }
-    private static string EncodeParameters(DataType[] dataTypes, params object[] parameters)
+    public static string EncodeParameters(DataType[] dataTypes, params object[] parameters)
     {
         string message = string.Empty;
         if (dataTypes == null)
@@ -348,7 +357,7 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         }
     }
 
-    static string BuildFormat(params object[] parameters) {
+    internal static string BuildFormat(params object[] parameters) {
         string outt = ""+parameters[0];
         for (int i = 1; i < parameters.Length; i++)
         {
@@ -382,7 +391,7 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
     }
     public static void Chat_Send(string chatMessage)
     {
-        chatMessage = chatMessage.Replace(" ", "_");
+        chatMessage = chatMessage.Replace(NET_DELIM, " ");
         string message = BuildFormat(LocalPlayer.actorID, (int)MessageInfo.Chat, chatMessage);
         LexChatManager.AddChat(message);
         networkConnector.EnqueueAMessage(message);
@@ -449,6 +458,9 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
     {
         //MUTEX
         playerDictionary.Add(player.actorID, player);
+        if (player.IsMasterClient) {
+            MasterClient = player;
+        }
         //MUTEX
     }
     internal static void RemovePlayerFromDictionary(int actorID)
@@ -460,37 +472,25 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         }
         //MUTEX
     }
-    public int RequestPrivateViewID() {
-        //MUTEX
-        int id = privateViewID++;
-        //MUTEX
-        return id;
-    }
-    public int RequestRoomViewID()
-    {
-        //MUTEX
-        int id = roomViewID++;
-        //MUTEX
-        return id;
-    }
 
-    public static void SetRoomCustomProperties(string key, object value)
+
+    public static void SetRoomCustomProperties(RoomProperty key, string value)
     {
         CustomProperty.SetRoomSetting(key, value);
         //Needs to be synced with server
         //server needs to keep all hash settings
-        instance.SetPlayerCustomProperty_Send(0, key, value);
+        instance.SetPlayerCustomProperty_Send(0, (int)key, value);
     }
-    internal void SetPlayerCustomProperty_Send(int actorID, string key, object value) { 
-         string message = BuildFormat(LocalPlayer.actorID, MessageInfo.SetHash, actorID, key, value);
+    internal void SetPlayerCustomProperty_Send(int actorID, int key, string value) { 
+         string message = BuildFormat(LocalPlayer.actorID,(int) MessageInfo.SetHash, actorID, key, value);
         networkConnector.EnqueueAMessage(message);
     }
 
-    internal void RoomProperty_Receive(string key, object value) {
+    internal void RoomProperty_Receive(RoomProperty key, string value) {
         CustomProperty.SetRoomSetting(key, value);
         //TODO : need to send event [callback]
     }
-    public static void SetPlayerCustomProperties(int actorNr, string key, object value)
+    public static void SetPlayerCustomProperties(int actorNr, PlayerProperty key, string value)
     {
         if (!playerDictionary.ContainsKey(actorNr)) {
             Debug.LogWarning("Missing player!" + actorNr);
@@ -498,6 +498,18 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         }
         playerDictionary[actorNr].SetCustomProperty(key,value);
     }
+
+
+    internal static void SetLocalPlayer(NetPlayer player) {
+        LocalPlayer = player;
+        playerDictionary.Add(player.actorID, player);
+        if (player.IsMasterClient) {
+            IsMasterClient = true;
+            MasterClient = player;
+        }
+    }
+
+
     private void Update()
     {
         networkConnector.DequeueReceivedBuffer();

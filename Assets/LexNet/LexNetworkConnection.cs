@@ -16,10 +16,12 @@ public class LexNetworkConnection
     public readonly static string NET_DELIM = "#";
 
     Queue<string> receivedQueue = new Queue<string>();
-     Queue<string> sendQueue = new Queue<string>();
+    Queue<string> sendQueue = new Queue<string>();
     Thread listenThread;
     Thread sendThread;
     Socket mySocket;
+    LexNetwork_CallbackHandler callbackHandler = new LexNetwork_CallbackHandler();
+
 
     bool stayConnected = true;
     // Start is called before the first frame update
@@ -107,12 +109,22 @@ public class LexNetworkConnection
         while (stayConnected)
         {
 
-            mySocket.Receive(packet);
+            try
+            {
+                mySocket.Receive(packet);
+            }
+            catch (Exception e){
+                Debug.LogWarning(e.Message);
+                Debug.LogWarning(e.StackTrace);
+                Debug.Log("Socket error");
+                return;
+            }
             MemoryStream ms2 = new MemoryStream(packet);
             BinaryReader br = new BinaryReader(ms2);
             str = br.ReadString();
             receivedQueue.Enqueue(str);
-            Debug.Log("수신한 메시지:" + str);
+           // Debug.Log("size "+str.Length);
+            Debug.Log(receivedQueue.Count+ "/ 수신한 메시지:" + str);
             br.Close();
             ms2.Close();
 
@@ -129,8 +141,9 @@ public class LexNetworkConnection
 
      void HandleMessage(string str)
     {
+      //  Debug.Log("Received message " + str);
         string[] tokens = str.Split('#');
-        //int i = 0;
+       // int i = 0;
        // foreach (string t in tokens) Debug.Log(t +" "+(i++) +" / "+tokens.Length);
         
         Debug.Assert(tokens.Length >= 2," Token information wrong");
@@ -160,24 +173,27 @@ public class LexNetworkConnection
             case MessageInfo.ServerRequest:
                 break;
             case MessageInfo.ServerCallbacks:
+                callbackHandler.ParseCallback(sentActorNumber, tokens);
                 break;
         }
     }
+
+
 
     private void ParseSetHash(int sentActorNumber, string[] tokens)
     {
         //actorNum, SetHash [int]roomOrPlayer [string]Key [int] DataType [object]value
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
         int targetHashID = Int32.Parse(tokens[2]); //0 = Room,
-        string key = tokens[3];
-        object value = ParseParameters(1, tokens, 4)[0];
+        int key = Int32.Parse(tokens[3]);
+        string value = (string) ParseParameters(1, tokens, 4)[0];
         
         if (targetHashID == 0)
         {
-            LexNetwork.instance.RoomProperty_Receive(key, value);
+            LexNetwork.instance.RoomProperty_Receive((RoomProperty)key, value);
         }
         else {
-            LexNetwork.SetPlayerCustomProperties(targetHashID, key, value);
+            LexNetwork.SetPlayerCustomProperties(targetHashID,(PlayerProperty) key, value);
         }
     }
 
@@ -223,7 +239,7 @@ public class LexNetworkConnection
     {
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
         //actorNum, Chat [string]chat message (needs cleansing)
-        string message = tokens[2].Replace(NET_DELIM," ");
+        string message = tokens[2];//.Replace(NET_DELIM," ");
         LexChatManager.AddChat(message);
     }
 
