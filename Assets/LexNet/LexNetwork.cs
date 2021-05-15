@@ -65,8 +65,8 @@ public class LexNetwork : MonoBehaviour
 
     private void RequestConnectedPlayerInformation()
     {
-        string message = BuildFormat("-1", (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
-        networkConnector.EnqueueAMessage(message);
+        LexNetworkMessage netMessage = new LexNetworkMessage("-1", (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
+        networkConnector.EnqueueAMessage(netMessage);
     }
 
     public static bool Reconnect() {
@@ -226,8 +226,8 @@ public class LexNetwork : MonoBehaviour
         Destroy(destroyTarget);//Replace with Object Pool
         viewDictionary.Remove(viewID);
         //Mutex
-        string message = BuildFormat(LocalPlayer.actorID, (int)MessageInfo.Destroy, viewID);
-        networkConnector.EnqueueAMessage(message);
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Destroy, viewID);
+        networkConnector.EnqueueAMessage(netMessage);
     }
 
     internal void Destroy_Receive(int viewID) {
@@ -318,31 +318,13 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
 
 
  */
-
-    public static string EncodeParameters(DataType[] dataTypes, params object[] parameters)
-    {
-        string message = string.Empty;
-        if (dataTypes == null)
-        {
-            message += NET_DELIM + 0;
-            return message;
-        }
-        
-        message += NET_DELIM + dataTypes.Length;
-        Debug.Assert(dataTypes.Length == parameters.Length);
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            message += NET_DELIM + (int)dataTypes[i];
-            message += NET_DELIM + parameters[i];
-        }
-        return message;
-    }
-
+   // RPC-send(NewsStyleUriParser Data[]{int, Double},sd,sd,sd)
     public static void RPC_Send(LexView lv, string functionName, DataType[] dataTypes = null, params object[] parameters ) {
-        string message = BuildFormat(LocalPlayer.actorID,(int)MessageInfo.RPC,lv.ViewID,functionName);
-        message += EncodeParameters(dataTypes, parameters);
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID,(int)MessageInfo.RPC,lv.ViewID,functionName);
+    
+        netMessage.EncodeParameters(dataTypes, parameters);
         lv.gameObject.SendMessage(functionName, parameters);
-        networkConnector.EnqueueAMessage(message);
+        networkConnector.EnqueueAMessage(netMessage);
     }
     internal static void RPC_Receive(int viewID, string functionName, params object[] parameters)
     {
@@ -357,8 +339,8 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         }
     }
 
-    internal static string BuildFormat(params object[] parameters) {
-        string outt = ""+parameters[0];
+    internal static string BuildFormatt(int expectedTokenLength , params object[] parameters) {
+        string outt = NET_SIG+NET_DELIM+expectedTokenLength+NET_DELIM+parameters[0];
         for (int i = 1; i < parameters.Length; i++)
         {
             outt += NET_DELIM + parameters[i];
@@ -368,9 +350,9 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
 
 
     public static void SyncVar_Send(LexView lv, DataType[] dataTypes, params object[] parameters) {
-        string message = BuildFormat(LocalPlayer.actorID, (int)MessageInfo.SyncVar, lv.ViewID);
-        message += EncodeParameters(dataTypes, parameters);
-        networkConnector.EnqueueAMessage(message);
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.SyncVar, lv.ViewID);
+        netMessage.EncodeParameters(dataTypes, parameters);
+        networkConnector.EnqueueAMessage(netMessage);
     }
     internal static void SyncVar_Receive(int viewID,  params object[] parameters)
     {
@@ -392,24 +374,24 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
     public static void Chat_Send(string chatMessage)
     {
         chatMessage = chatMessage.Replace(NET_DELIM, " ");
-        string message = BuildFormat(LocalPlayer.actorID, (int)MessageInfo.Chat, chatMessage);
-        LexChatManager.AddChat(message);
-        networkConnector.EnqueueAMessage(message);
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Chat, chatMessage);
+        LexChatManager.AddChat(chatMessage);
+        networkConnector.EnqueueAMessage(netMessage);
     }
 
     private void Instantiate_Send(int viewID, int ownerID, string prefabName,  Vector3 position, Quaternion quaternion, LexView parentView,DataType[] dataTypes, params object[] parameters)
     {
-        string message = BuildFormat(LocalPlayer.actorID, (int)MessageInfo.Instantiate, viewID, ownerID, prefabName, position,quaternion);
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Instantiate, viewID, ownerID, prefabName, position,quaternion);
         if (parentView == null)
         {
-            message += NET_DELIM + "-1";
+            netMessage.Add("-1");
         }
         else
         {
-            message += NET_DELIM + parentView.ViewID;
+            netMessage.Add(parentView.ViewID);
         }
-        message += EncodeParameters(dataTypes, parameters);
-        networkConnector.EnqueueAMessage(message);
+        netMessage.EncodeParameters(dataTypes, parameters);
+        networkConnector.EnqueueAMessage(netMessage);
     }
 
 
@@ -481,9 +463,9 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         //server needs to keep all hash settings
         instance.SetPlayerCustomProperty_Send(0, (int)key, value);
     }
-    internal void SetPlayerCustomProperty_Send(int actorID, int key, string value) { 
-         string message = BuildFormat(LocalPlayer.actorID,(int) MessageInfo.SetHash, actorID, key, value);
-        networkConnector.EnqueueAMessage(message);
+    internal void SetPlayerCustomProperty_Send(int actorID, int key, string value) {
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID,(int) MessageInfo.SetHash, actorID, key, value);
+        networkConnector.EnqueueAMessage(netMessage);
     }
 
     internal void RoomProperty_Receive(RoomProperty key, string value) {

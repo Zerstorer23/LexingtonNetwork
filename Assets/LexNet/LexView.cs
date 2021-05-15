@@ -6,6 +6,7 @@ using UnityEngine;
 public class LexView : MonoBehaviour
 {
    [SerializeField] private int prViewID = -1;
+    private bool requestSceneviewID = true;
    public int ViewID
     {
         get { return prViewID; }
@@ -51,10 +52,14 @@ public class LexView : MonoBehaviour
     private void Awake()
     {
         serializedView = GetComponent<LexNetwork_SyncVar>();
-        if (!Application.isPlaying && prViewID ==-1) {
+        if (!Application.isPlaying && requestSceneviewID) {
             prViewID = LexNetwork_ViewID_Manager.RequestRoomViewID();
             IsMine = true;
+            requestSceneviewID = true;
             LexNetwork.AddViewtoDictionary(this);
+            //세거나 저장하거나..
+            //
+            //매번 세서 순서대로 번호를 붙이는게
         }
     }
     private void Start()

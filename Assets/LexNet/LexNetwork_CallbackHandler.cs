@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class LexNetwork_CallbackHandler
 {
-    public void ParseCallback(int sentActorNumber, string[] tokens)
+    public void ParseCallback(int sentActorNumber, LexNetworkMessage netMessage)
     {
         //actorID , MessageInfo , callbackType, params
-        LexCallback callbackType = (LexCallback)Int32.Parse(tokens[2]);
+        LexCallback callbackType = (LexCallback)Int32.Parse(netMessage.GetNext());
         switch (callbackType)
         {
             case LexCallback.None:
@@ -18,7 +18,7 @@ public class LexNetwork_CallbackHandler
             case LexCallback.PlayerDisconnected:
                 break;
             case LexCallback.LocalPlayerJoined:
-                Handle_LocalPlayerJoin(sentActorNumber, tokens);
+                Handle_LocalPlayerJoin(sentActorNumber, netMessage);
                 break;
             case LexCallback.Receive_RoomHash:
                 break;
@@ -30,7 +30,7 @@ public class LexNetwork_CallbackHandler
 
     }
 
-    private void Handle_LocalPlayerJoin(int sentActorNumber, string[] tokens)
+    private void Handle_LocalPlayerJoin(int sentActorNumber, LexNetworkMessage netMessage)
     {
         /*
          0 Sent Actor Num = -1
@@ -47,32 +47,27 @@ public class LexNetwork_CallbackHandler
          */
         //params = [int]numPlayers(local Included) , LocalPlayerInfo , players[...
         //Player Info = actorID, isMaster, customprop[num prop]
-        Queue<string> stringQueue = new Queue<string>();
-        for (int i = 3; i < tokens.Length; i++)
-        {
-            stringQueue.Enqueue(tokens[i]);
-        }
         //Load Room
-        int numRoomHash = Int32.Parse(stringQueue.Dequeue());
+        int numRoomHash = Int32.Parse(netMessage.GetNext());
         int count = 0;
         Debug.Log("Number of room hash : " + numRoomHash);
         while (count < numRoomHash) {
-            RoomProperty key = (RoomProperty)Int32.Parse(stringQueue.Dequeue());
-            string value = stringQueue.Dequeue();
+            RoomProperty key = (RoomProperty)Int32.Parse(netMessage.GetNext());
+            string value = netMessage.GetNext();
             Debug.Log("room hash : " + key+" / "+value);
             LexNetwork.instance.RoomProperty_Receive(key, value);
             count++;
         }
 
         //Load Players
-        int numPlayers = Int32.Parse(stringQueue.Dequeue());
+        int numPlayers = Int32.Parse(netMessage.GetNext());
         Debug.Log("Number of Players: " + numRoomHash);
         count = 1;
-        NetPlayer localPlayer = new NetPlayer(true, stringQueue);
+        NetPlayer localPlayer = new NetPlayer(true, netMessage);
         LexNetwork.SetLocalPlayer(localPlayer);
         while (count < numPlayers)
         {
-            NetPlayer player = new NetPlayer(false, stringQueue);
+            NetPlayer player = new NetPlayer(false, netMessage);
             LexNetwork.AddPlayerToDictionary(player);
             count++;
         }

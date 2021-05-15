@@ -20,18 +20,18 @@ public class NetPlayer
         CustomProperties = new Dictionary<PlayerProperty, string>();
     }
 */
-    public NetPlayer(bool isLocal, Queue<string> stringQueue)
+    public NetPlayer(bool isLocal, LexNetworkMessage netMessage)
     {
         this.isLocal = isLocal;
         CustomProperties = new Dictionary<PlayerProperty, string>();
-        this.actorID = Int32.Parse(stringQueue.Dequeue());
-        this.IsMasterClient = stringQueue.Dequeue()=="1";
-        int numParam = Int32.Parse(stringQueue.Dequeue());
+        this.actorID = Int32.Parse(netMessage.GetNext());
+        this.IsMasterClient = netMessage.GetNext() == "1";
+        int numParam = Int32.Parse(netMessage.GetNext());
         int i = 0;
         Debug.Log(string.Format("Received Player {0}, isMaster{1}", actorID, IsMasterClient));
         while (i < numParam) {
-            PlayerProperty key =(PlayerProperty) Int32.Parse(stringQueue.Dequeue());
-            string value = stringQueue.Dequeue();
+            PlayerProperty key =(PlayerProperty) Int32.Parse(netMessage.GetNext());
+            string value = netMessage.GetNext();
             Debug.Log("Key " + key + " / " + value);
             CustomProperties.Add(key, value);
             i++;
@@ -48,13 +48,13 @@ public class NetPlayer
     }
     //ActorID, isMaster, numParam ....key values
     public string EncodeToString() {
-        string message = LexNetwork.BuildFormat(actorID, IsMasterClient);
-        message += LexNetworkConnection.NET_DELIM + CustomProperties.Count;
+        LexNetworkMessage netMessage = new LexNetworkMessage(actorID, IsMasterClient, CustomProperties.Count);
         foreach (var entry in CustomProperties) {
-         //   string cleanValue = entry.Value.Replace(LexNetworkConnection.NET_DELIM,)
-            message += LexNetworkConnection.NET_DELIM + entry.Key + LexNetworkConnection.NET_DELIM + entry.Value;
+            //   string cleanValue = entry.Value.Replace(LexNetworkConnection.NET_DELIM,)
+            netMessage.Add(entry.Key);
+            netMessage.Add(entry.Value);
         }
-        return message;
+        return netMessage.Build();
     }
 
     public void SetCustomProperty(PlayerProperty key, string value) {

@@ -12,11 +12,12 @@ public class LexNetworkConnection
 {
     string ipAddress = "127.0.0.1";
     int portNumber = 9000;
-    static int BUFFER = 1024;
+    static int BUFFER = 32* 1024;
     public readonly static string NET_DELIM = "#";
+    public readonly static string NET_SIG = "LEX";
 
     Queue<string> receivedQueue = new Queue<string>();
-    Queue<string> sendQueue = new Queue<string>();
+    Queue<LexNetworkMessage> sendQueue = new Queue<LexNetworkMessage>();
     Thread listenThread;
     Thread sendThread;
     Socket mySocket;
@@ -63,24 +64,43 @@ public class LexNetworkConnection
         return true;
     }
     public void SendMessage()
-    {
+    {//ㅁㄴㅇㄹㄴ ㅎㅇㅀㅇㅀ
+        //program1-
+        //[20길]3#3#3#123123ㄹ3//20
         while (stayConnected)
         {
+            //MUTEX
             while (sendQueue.Count > 0)
             {
-                //MUTEX
-                SendAMessage(sendQueue.Dequeue());
-                //MUTEX
+                string message = MergeMessages();
+                Debug.Log("Send message " + message);
+                SendAMessage(message);
+     //무한루프에 주의        
             }
+            //MUTEX
         }
     }
-    public void EnqueueAMessage(string str)
+    public void EnqueueAMessage(LexNetworkMessage netMessage)
     {
         //MUTEX
-        Debug.Log("Enqueue : " + str);
-        sendQueue.Enqueue(str);
+        sendQueue.Enqueue(netMessage);
         //MUTEX
     }
+    string MergeMessages() {
+        string message = sendQueue.Dequeue().Build();
+        while (sendQueue.Count > 0)
+        {
+            string nextMessage = sendQueue.Peek().Build();
+            //vector adfdas
+            //
+            if ((message.Length + nextMessage.Length+1) < BUFFER) {
+                message += nextMessage;
+                sendQueue.Dequeue();
+            } 
+        }
+        return message;
+    }
+
 
     private void SendAMessage(string str)
     {
@@ -111,7 +131,15 @@ public class LexNetworkConnection
 
             try
             {
+                //서버 40
+                // 40다
+                //TODO 
+                // 1 40 / 2 50 
+                // c# socket buffer 늘리기
                 mySocket.Receive(packet);
+                //[----------------]
+                //"333" <- 6
+                //"22" <-4
             }
             catch (Exception e){
                 Debug.LogWarning(e.Message);
@@ -135,58 +163,68 @@ public class LexNetworkConnection
     //그래서queue에 저장후  따로 Update에서 호출하도록함
     public void DequeueReceivedBuffer() {
         while (receivedQueue.Count > 0) {
-            HandleMessage(receivedQueue.Dequeue());
+            string message = receivedQueue.Dequeue();
+            Debug.Log("Received " + message);
+            HandleMessage(message);
         }
     }
 
      void HandleMessage(string str)
     {
-      //  Debug.Log("Received message " + str);
-        string[] tokens = str.Split('#');
-       // int i = 0;
-       // foreach (string t in tokens) Debug.Log(t +" "+(i++) +" / "+tokens.Length);
-        
-        Debug.Assert(tokens.Length >= 2," Token information wrong");
-        int sentActorNumber =  Int32.Parse(tokens[0]);
-        MessageInfo messageInfo = (MessageInfo)Int32.Parse(tokens[1]);
-        Debug.Log(sentActorNumber+ " message " + messageInfo);
-        switch (messageInfo)
-        {
-            case MessageInfo.RPC:
-                ParseRPC(sentActorNumber, tokens);
-                break;
-            case MessageInfo.SyncVar:
-                ParseSyncVar(sentActorNumber, tokens);
-                break;
-            case MessageInfo.Chat:
-                ParseChat(sentActorNumber, tokens);
-                break;
-            case MessageInfo.Instantiate:
-                ParseInstantiate(sentActorNumber, tokens);
-                break;
-            case MessageInfo.Destroy:
-                ParseDestroy(sentActorNumber, tokens);
-                break;
-            case MessageInfo.SetHash:
-                ParseSetHash(sentActorNumber, tokens);
-                break;
-            case MessageInfo.ServerRequest:
-                break;
-            case MessageInfo.ServerCallbacks:
-                callbackHandler.ParseCallback(sentActorNumber, tokens);
-                break;
+        //  Debug.Log("Received message " + str);
+
+        LexNetworkMessage netMessage = new LexNetworkMessage();
+        netMessage.Split(str);
+        while (netMessage.HasNext()) {
+            Debug.Assert(netMessage.GetReceivedSize() >= 4, " Token information wrong");//TODO:: Queue이용하는 포맷으로 바꾸기
+            string signature = netMessage.GetNext();
+            bool isMyPacket = (signature == NET_SIG);
+            if (!isMyPacket) continue;
+            int lengthOfMessages = Int32.Parse(netMessage.GetNext());
+            int sentActorNumber = Int32.Parse(netMessage.GetNext());
+            MessageInfo messageInfo = (MessageInfo)Int32.Parse(netMessage.GetNext());
+            Debug.Log(sentActorNumber + " message " + messageInfo);
+            switch (messageInfo)
+            {
+                case MessageInfo.RPC:
+                    ParseRPC(sentActorNumber, netMessage);
+                    break;
+                case MessageInfo.SyncVar:
+                    ParseSyncVar(sentActorNumber, netMessage);
+                    break;
+                case MessageInfo.Chat:
+                    ParseChat(sentActorNumber, netMessage);
+                    break;
+                case MessageInfo.Instantiate:
+                    ParseInstantiate(sentActorNumber, netMessage);
+                    break;
+                case MessageInfo.Destroy:
+                    ParseDestroy(sentActorNumber, netMessage);
+                    break;
+                case MessageInfo.SetHash:
+                    ParseSetHash(sentActorNumber, netMessage);
+                    break;
+                case MessageInfo.ServerRequest:
+                    break;
+                case MessageInfo.ServerCallbacks:
+                    callbackHandler.ParseCallback(sentActorNumber, netMessage);
+                    break;
+            }
+
         }
+        
+     
     }
 
 
 
-    private void ParseSetHash(int sentActorNumber, string[] tokens)
+    private void ParseSetHash(int sentActorNumber, LexNetworkMessage netMessage)
     {
         //actorNum, SetHash [int]roomOrPlayer [string]Key [int] DataType [object]value
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
-        int targetHashID = Int32.Parse(tokens[2]); //0 = Room,
-        int key = Int32.Parse(tokens[3]);
-        string value = (string) ParseParameters(1, tokens, 4)[0];
+        int targetHashID = Int32.Parse(netMessage.GetNext()); //0 = Room,
+        int key = Int32.Parse(netMessage.GetNext());
+        string value = (string) ParseParameters(1, netMessage)[0];
         
         if (targetHashID == 0)
         {
@@ -197,24 +235,24 @@ public class LexNetworkConnection
         }
     }
 
-    private void ParseDestroy(int sentActorNumber, string[] tokens)
+    private void ParseDestroy(int sentActorNumber, LexNetworkMessage netMessage)
     {
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
-        int targetViewID = Int32.Parse(tokens[2]);
+        int targetViewID = Int32.Parse(netMessage.GetNext());
         LexNetwork.instance.Destroy_Receive(targetViewID);
 
     }
 
-    private void ParseInstantiate(int sentActorNumber, string[] tokens)
+    private void ParseInstantiate(int sentActorNumber, LexNetworkMessage netMessage)
     {
        if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
         //actorNum, Instantiate [int]viewID [int]ownerID [string]prefabName [flaot,float,float] position [float,float,float]quarternion parentviewID [object[...]] params
-        int targetViewID = Int32.Parse(tokens[2]);
-        int ownerID = Int32.Parse(tokens[3]);
-        string prefabName = tokens[4];
-        Vector3 position = StringToVector3(tokens[5]);
-        Quaternion quaternion = StringToQuarternion(tokens[6]);
-        int parentID = Int32.Parse(tokens[7]);
+        int targetViewID = Int32.Parse(netMessage.GetNext());
+        int ownerID = Int32.Parse(netMessage.GetNext());
+        string prefabName = netMessage.GetNext();
+        Vector3 position = StringToVector3(netMessage.GetNext());
+        Quaternion quaternion = StringToQuarternion(netMessage.GetNext());
+        int parentID = Int32.Parse(netMessage.GetNext());
         LexView plv = LexNetwork.GetViewByID(parentID);
         GameObject go = null;
         if (plv != null)
@@ -227,58 +265,57 @@ public class LexNetworkConnection
         LexView childView = go.GetComponent<LexView>();
         childView.SetInformation(targetViewID,ownerID,sentActorNumber,false);
         //Params
-        int numParams = Int32.Parse(tokens[8]);
+        int numParams = Int32.Parse(netMessage.GetNext());
         if (numParams > 0) {
-            var param = ParseParameters(numParams, tokens, 9);
+            var param = ParseParameters(numParams, netMessage);
             childView.SetInstantiateData(param);
         }
         LexNetwork.AddViewtoDictionary(childView);
     }
 
-    private void ParseChat(int sentActorNumber, string[] tokens)
+    private void ParseChat(int sentActorNumber, LexNetworkMessage netMessage)
     {
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
         //actorNum, Chat [string]chat message (needs cleansing)
-        string message = tokens[2];//.Replace(NET_DELIM," ");
+        string message = netMessage.GetNext();//.Replace(NET_DELIM," ");
         LexChatManager.AddChat(message);
     }
 
-    private void ParseSyncVar(int sentActorNumber, string[] tokens)
+    private void ParseSyncVar(int sentActorNumber, LexNetworkMessage netMessage)
     {
         //actorNum, SyncVar [int]viewID  [int]numparam ,[object[,,,]] params
-        int targetViewID = Int32.Parse(tokens[2]);
-        int numParams = Int32.Parse(tokens[3]);
+        int targetViewID = Int32.Parse(netMessage.GetNext());
+        int numParams = Int32.Parse(netMessage.GetNext());
         Debug.Assert(numParams != 0,"Syncing what?");
-        var param = ParseParameters(numParams, tokens, 4);
+        var param = ParseParameters(numParams, netMessage);
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
         LexNetwork.SyncVar_Receive(targetViewID, param);
     }
 
     //  actorNum, RPC[int] viewID[string] FunctionName[object[...]]params
-    private void ParseRPC(int sentActorNumber, string[] tokens)
+    private void ParseRPC(int sentActorNumber, LexNetworkMessage netMessage)
     {
-        Debug.Assert(tokens.Length >= 3, " Token information wrong");
-        int targetViewID = Int32.Parse(tokens[2]);
-        string functionName = tokens[3];
-        int numParams = Int32.Parse(tokens[4]);
+        int targetViewID = Int32.Parse(netMessage.GetNext());
+        string functionName = netMessage.GetNext();
+        int numParams = Int32.Parse(netMessage.GetNext());
         if (numParams == 0)
         {
             LexNetwork.RPC_Receive(targetViewID, functionName);
         }
         else
         {
-            var param = ParseParameters(numParams, tokens, 5);
+            var param = ParseParameters(numParams, netMessage);
             LexNetwork.RPC_Receive(targetViewID, functionName, param);
         }
     }
 
-    object[] ParseParameters(int numParams, string[] tokens, int beginIndex) {
+    object[] ParseParameters(int numParams, LexNetworkMessage netMessage) {
         object[] param = new object[numParams];
         int index = 0;
-        for (int i = beginIndex; i < tokens.Length; i += 2)
+        for (int i = 0; i < numParams; i++)
         {
-            DataType dType = (DataType)Int32.Parse(tokens[i]);
-            string dataInfo = tokens[i + 1];
+            DataType dType = (DataType)Int32.Parse(netMessage.GetNext());
+            string dataInfo = netMessage.GetNext();
             switch (dType)
             {
                 case DataType.STRING:
