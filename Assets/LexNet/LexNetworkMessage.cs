@@ -67,6 +67,7 @@ public class LexNetworkMessage
         receivedQueue = new Queue<string>();
         string[] tokens = message.Split('#');
         foreach (string s in tokens) {
+         //   Debug.Log(receivedQueue.Count+" : "+ s);
             receivedQueue.Enqueue(s);
         }
     }

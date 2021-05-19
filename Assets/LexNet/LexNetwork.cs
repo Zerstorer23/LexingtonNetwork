@@ -11,7 +11,9 @@ public class LexNetwork : MonoBehaviour
 {
     private static Dictionary<int, LexView> viewDictionary = new Dictionary<int, LexView>();
     private static Dictionary<int, NetPlayer> playerDictionary  = new Dictionary<int, NetPlayer>();
-    
+    private static Mutex mutex = new Mutex();
+
+
     static readonly int MAX_VIEW_IDS = 1000;
 
     public static string ServerAddress;
@@ -222,9 +224,11 @@ public class LexNetwork : MonoBehaviour
             return;
         }
         //Mutex
+        mutex.WaitOne();
         RemoveRPCs(lv); //서버 버퍼에서 Instantiate와 모든 RPC제거
         Destroy(destroyTarget);//Replace with Object Pool
         viewDictionary.Remove(viewID);
+        mutex.ReleaseMutex();
         //Mutex
         LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Destroy, viewID);
         networkConnector.EnqueueAMessage(netMessage);
@@ -238,8 +242,10 @@ public class LexNetwork : MonoBehaviour
         }
 
         //Mutex
+        mutex.WaitOne();
         Destroy(viewDictionary[viewID].gameObject);
         viewDictionary.Remove(viewID);
+        mutex.ReleaseMutex();
         //Mutex
     }
 
@@ -250,6 +256,7 @@ public class LexNetwork : MonoBehaviour
         //3. [클라이언트] 해당유저 Destroy 콜
         //4. [클라이언트] playerlist업데이트
         //Mutex
+        mutex.WaitOne();
         var viewList = new List<LexView> (viewDictionary.Values);
         foreach (var lv in viewList) {
             if (lv.ownerActorNr == actorID) {
@@ -257,6 +264,7 @@ public class LexNetwork : MonoBehaviour
                 Destroy(lv.gameObject);
             }
         }
+        mutex.ReleaseMutex();
         //Mutex
     }
 
@@ -399,6 +407,8 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
     internal static LexView GetViewByID(int ID)
     {
         //MUTEX
+
+        mutex.WaitOne();
         if (viewDictionary.ContainsKey(ID))
         {
             return viewDictionary[ID];
@@ -406,6 +416,7 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         else {
             return null;
         }
+        mutex.ReleaseMutex();
         //MUTEX
     }
     internal static NetPlayer GetPlayerByID(int actorID)
@@ -424,34 +435,42 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
     internal static void AddViewtoDictionary(LexView lv)
     {
         //MUTEX
+        mutex.WaitOne();
         viewDictionary.Add(lv.ViewID, lv);
+        mutex.ReleaseMutex();
         //MUTEX
     }
     internal static void RemoveViewFromDictionary(int viewID)
     {
         //MUTEX
+        mutex.WaitOne();
         if (viewDictionary.ContainsKey(viewID)) {
             viewDictionary.Remove(viewID);
         }
+        mutex.ReleaseMutex();
         //MUTEX
     }
 
     internal static void AddPlayerToDictionary(NetPlayer player)
     {
         //MUTEX
+        mutex.WaitOne();
         playerDictionary.Add(player.actorID, player);
         if (player.IsMasterClient) {
             MasterClient = player;
         }
+        mutex.ReleaseMutex();
         //MUTEX
     }
     internal static void RemovePlayerFromDictionary(int actorID)
     {
         //MUTEX
+        mutex.WaitOne();
         if (playerDictionary.ContainsKey(actorID))
         {
             playerDictionary.Remove(actorID);
         }
+        mutex.ReleaseMutex();
         //MUTEX
     }
 

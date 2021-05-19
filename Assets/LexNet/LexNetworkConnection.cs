@@ -15,6 +15,7 @@ public class LexNetworkConnection
     static int BUFFER = 32* 1024;
     public readonly static string NET_DELIM = "#";
     public readonly static string NET_SIG = "LEX";
+    private static Mutex mutex = new Mutex();
 
     Queue<string> receivedQueue = new Queue<string>();
     Queue<LexNetworkMessage> sendQueue = new Queue<LexNetworkMessage>();
@@ -37,6 +38,7 @@ public class LexNetworkConnection
               );//소켓 생성
                 //인터페이스 결합(옵션)
                 //연결
+        mySocket.ReceiveBufferSize = 32 * 1024;
         IPAddress addr = IPAddress.Parse(ipAddress);
         IPEndPoint iep = new IPEndPoint(addr, portNumber);
         try
@@ -70,6 +72,7 @@ public class LexNetworkConnection
         while (stayConnected)
         {
             //MUTEX
+            mutex.WaitOne();
             while (sendQueue.Count > 0)
             {
                 string message = MergeMessages();
@@ -77,13 +80,16 @@ public class LexNetworkConnection
                 SendAMessage(message);
      //무한루프에 주의        
             }
+            mutex.ReleaseMutex();
             //MUTEX
         }
     }
     public void EnqueueAMessage(LexNetworkMessage netMessage)
     {
         //MUTEX
+        mutex.WaitOne();
         sendQueue.Enqueue(netMessage);
+        mutex.ReleaseMutex();
         //MUTEX
     }
     string MergeMessages() {
@@ -164,19 +170,18 @@ public class LexNetworkConnection
     public void DequeueReceivedBuffer() {
         while (receivedQueue.Count > 0) {
             string message = receivedQueue.Dequeue();
-            Debug.Log("Received " + message);
             HandleMessage(message);
         }
     }
 
      void HandleMessage(string str)
     {
-        //  Debug.Log("Received message " + str);
-
+        Debug.Log("Received message " + str);
         LexNetworkMessage netMessage = new LexNetworkMessage();
         netMessage.Split(str);
-        while (netMessage.HasNext()) {
-            Debug.Assert(netMessage.GetReceivedSize() >= 4, " Token information wrong");//TODO:: Queue이용하는 포맷으로 바꾸기
+        while (netMessage.HasNext())
+        {
+            Debug.Log("Received size " + netMessage.GetReceivedSize());
             string signature = netMessage.GetNext();
             bool isMyPacket = (signature == NET_SIG);
             if (!isMyPacket) continue;
@@ -225,7 +230,6 @@ public class LexNetworkConnection
         int targetHashID = Int32.Parse(netMessage.GetNext()); //0 = Room,
         int key = Int32.Parse(netMessage.GetNext());
         string value = (string) ParseParameters(1, netMessage)[0];
-        
         if (targetHashID == 0)
         {
             LexNetwork.instance.RoomProperty_Receive((RoomProperty)key, value);
