@@ -17,20 +17,29 @@ public class LexNetwork_CallbackHandler
                 break;
             case LexCallback.PlayerDisconnected:
                 break;
-            case LexCallback.LocalPlayerJoined:
-                Handle_LocalPlayerJoin(sentActorNumber, netMessage);
-                break;
-            case LexCallback.Receive_RoomHash:
-                break;
-            case LexCallback.Receive_PlayerHash:
+            case LexCallback.RoomInformationReceived:
+                Handle_Receive_RoomInformation(sentActorNumber, netMessage);
                 break;
             case LexCallback.MasterClientChanged:
+                break;
+            case LexCallback.BufferedRPCsLoaded:
+                Handle_Receive_BufferedRPCs(sentActorNumber);
                 break;
         }
 
     }
 
-    private void Handle_LocalPlayerJoin(int sentActorNumber, LexNetworkMessage netMessage)
+    private void Handle_Receive_BufferedRPCs(int sentActorNumber)
+    {
+        if (sentActorNumber != LexNetwork.LocalPlayer.actorID) {
+            Debug.LogWarning("Not suppoed to happen");
+            return;
+        }
+        LexNetwork.instance.SetConnected(true);
+        NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
+    }
+
+    private void Handle_Receive_RoomInformation(int sentActorNumber, LexNetworkMessage netMessage)
     {
         /*
          0 Sent Actor Num = -1
@@ -71,36 +80,7 @@ public class LexNetwork_CallbackHandler
             LexNetwork.AddPlayerToDictionary(player);
             count++;
         }
-
-        LexNetwork.instance.SetConnected(true);
-        NetworkEventManager.TriggerEvent(LexCallback.LocalPlayerJoined, null);
+        LexNetwork.instance.RequestBufferedRPCs();
     }
 }
 
-public enum MessageInfo {
-    ServerRequest, RPC,SyncVar,Chat,Instantiate,Destroy,SetHash, ServerCallbacks
-}
-public enum LexCallback
-{
-    None, PlayerJoined,PlayerDisconnected,LocalPlayerJoined,Receive_RoomHash,Receive_PlayerHash,MasterClientChanged
-}
-public enum LexRequest
-{
-    None, RemoveRPC_ViewID, RemoveRPC_Player,Receive_Initialise,Receive_RPCbuffer
-}
-/*
-
-actorNum, RPC [int]viewID [string]FunctionName [object[...]]params
-
-actorNum, SyncVar [int]viewID  [object[,,,]] params
-
-actorNum, Chat [string]chat message (needs cleansing)
-
-actorNum, Instantiate [int]viewID [string]prefabName [flaot,float,float] position [float,float,float]quarternion [object[...]] params
-
-actorNum, Destroy [int]viewID
-
-actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
-
-
- */

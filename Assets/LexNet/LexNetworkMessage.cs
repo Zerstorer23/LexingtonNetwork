@@ -81,3 +81,33 @@ public class LexNetworkMessage
         return receivedQueue.Count > 0;
     }
 }
+public enum MessageInfo
+{
+    ServerRequest, RPC, SyncVar, Chat, Instantiate, Destroy, SetHash, ServerCallbacks
+}
+public enum LexCallback
+{
+    None, PlayerJoined, PlayerDisconnected, OnLocalPlayerJoined, MasterClientChanged,
+    BufferedRPCsLoaded,
+    RoomInformationReceived
+}
+public enum LexRequest
+{
+    None, RemoveRPC_ViewID, RemoveRPC_Player, Receive_Initialise, Receive_RPCbuffer
+}
+/*
+
+actorNum, RPC [int]viewID [string]FunctionName [object[...]]params
+
+actorNum, SyncVar [int]viewID  [object[,,,]] params
+
+actorNum, Chat [string]chat message (needs cleansing)
+
+actorNum, Instantiate [int]viewID [string]prefabName [flaot,float,float] position [float,float,float]quarternion [object[...]] params
+
+actorNum, Destroy [int]viewID
+
+actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
+
+
+ */

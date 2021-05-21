@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System;
 using static LexNetworkConnection;
-public class LexNetwork : MonoBehaviour
+public class LexNetwork : MonobehaviourLexCallbacks
 {
     private static Dictionary<int, LexView> viewDictionary = new Dictionary<int, LexView>();
     private static Dictionary<int, NetPlayer> playerDictionary  = new Dictionary<int, NetPlayer>();
@@ -68,6 +68,11 @@ public class LexNetwork : MonoBehaviour
     private void RequestConnectedPlayerInformation()
     {
         LexNetworkMessage netMessage = new LexNetworkMessage("-1", (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
+        networkConnector.EnqueueAMessage(netMessage);
+    }
+    public void RequestBufferedRPCs()
+    {
+        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_RPCbuffer);
         networkConnector.EnqueueAMessage(netMessage);
     }
 
