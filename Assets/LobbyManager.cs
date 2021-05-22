@@ -20,12 +20,12 @@ public class LobbyManager : MonobehaviourLexCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
+      /*  LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
         LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
         LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
         LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
         LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
+        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");*/
 
         Debug.Log("Join successful");
 

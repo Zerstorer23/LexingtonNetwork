@@ -5,10 +5,22 @@ using UnityEngine;
 
 public class LexNetwork_CallbackHandler
 {
+    public LexNetworkConnection networkConnector;
+    bool timeSynched = false;
+    bool rpcSynched = false;
     public void ParseCallback(int sentActorNumber, LexNetworkMessage netMessage)
     {
         //actorID , MessageInfo , callbackType, params
-        LexCallback callbackType = (LexCallback)Int32.Parse(netMessage.GetNext());
+        string cbt = netMessage.GetNext();
+        char[] arr = cbt.ToCharArray();
+        string code = "";
+        foreach (char c in arr) {
+            code += " " + (int)c;
+        }
+        Debug.Log(code);
+        Debug.Log("Callback type " + cbt);
+        int cbtNum = Int32.Parse(cbt);
+        LexCallback callbackType = (LexCallback)cbtNum;
         switch (callbackType)
         {
             case LexCallback.None:
@@ -25,18 +37,52 @@ public class LexNetwork_CallbackHandler
             case LexCallback.BufferedRPCsLoaded:
                 Handle_Receive_BufferedRPCs(sentActorNumber);
                 break;
+            case LexCallback.PushServerTime:
+                Handle_Receive_ServerTime(netMessage);
+                break;
         }
 
+    }
+
+    private void Handle_Receive_ServerTime(LexNetworkMessage netMessage)
+    {
+        //LEX / 0 =SERVER / PING=MESSAGEINFO / targetPlater /1 OR 0 = INDEX TO REFER / SERVERTIME or EXPECTEDDELAY
+        int targetPlayer = Int32.Parse(netMessage.GetNext());
+        bool isModification = Int32.Parse(netMessage.GetNext()) != 0;
+        long timeValue = long.Parse(netMessage.GetNext());
+        Debug.Log("Received servertime " + isModification + " / " + timeValue);
+        Debug.Assert(targetPlayer == LexNetwork.LocalPlayer.actorID, "Received wrong message");
+        LexNetwork.instance.SetServerTime(isModification, timeValue);
+        if (!isModification)
+        {
+            RequestServerTime(true);
+        }
+        else {
+            timeSynched = true;
+            if (rpcSynched)
+            {
+                LexNetwork.instance.SetConnected(true);
+                NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
+            }
+        }
     }
 
     private void Handle_Receive_BufferedRPCs(int sentActorNumber)
     {
         if (sentActorNumber != LexNetwork.LocalPlayer.actorID) {
-            Debug.LogWarning("Not suppoed to happen");
+            Debug.LogWarning("Not supposed to happen");
             return;
         }
-        LexNetwork.instance.SetConnected(true);
-        NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
+        //TODO
+
+        Debug.Log("Received RPCs");
+
+        rpcSynched = true;
+        if (timeSynched)
+        {
+            LexNetwork.instance.SetConnected(true);
+            NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
+        }
     }
 
     private void Handle_Receive_RoomInformation(int sentActorNumber, LexNetworkMessage netMessage)
@@ -80,7 +126,27 @@ public class LexNetwork_CallbackHandler
             LexNetwork.AddPlayerToDictionary(player);
             count++;
         }
-        LexNetwork.instance.RequestBufferedRPCs();
+        
+        RequestBufferedRPCs();
+        RequestServerTime(false);
+    }
+
+    public void RequestBufferedRPCs()
+    {
+        Debug.Log("Request buffered rpcs");
+        LexNetworkMessage netMessage = new LexNetworkMessage(LexNetwork.LocalPlayer.actorID, (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_RPCbuffer);
+        networkConnector.EnqueueAMessage(netMessage);
+    }
+
+
+    void RequestServerTime(bool requestModification)
+    {
+        Debug.Log("Request servertime "+requestModification);
+        LexNetworkMessage requestMessage = new LexNetworkMessage(
+               LexNetwork.LocalPlayer.actorID, (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_modifiedTime,
+                LexNetwork.LocalPlayer.actorID, (requestModification)?"1":"0", "0"
+               );
+        networkConnector.EnqueueAMessage(requestMessage);
     }
 }
 

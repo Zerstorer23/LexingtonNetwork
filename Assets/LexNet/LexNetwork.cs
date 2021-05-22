@@ -22,7 +22,7 @@ public class LexNetwork : MonobehaviourLexCallbacks
     public static NetPlayer MasterClient { get; private set; }
     public static string NickName { get; private set; }
 //    public static NetPlayer[] playerList;
-    public static double Time { get; private set; }
+    public static double NetTime { get; private set; }
     public static bool IsConnected { get; private set; }
     public static bool IsMasterClient { get; private set; }
     public static int countOfPlayersInRoom;
@@ -51,6 +51,19 @@ public class LexNetwork : MonobehaviourLexCallbacks
             return prNetwork;
         }
     }
+
+    internal void SetServerTime(bool isModification, long timeValue)
+    {
+        if (isModification)
+        {
+            NetTime+= (double)timeValue / 1000;
+        }
+        else {
+            NetTime = (double)timeValue / 1000; //long is in mills
+        }
+        Debug.Log("Modified time : " + NetTime);
+    }
+
     public static bool ConnectUsingSettings() {
         //TODO
         //1 소켓 연결
@@ -58,24 +71,18 @@ public class LexNetwork : MonobehaviourLexCallbacks
         bool success = networkConnector.Connect();
         if (!success) return false;
         //2 연결 성공시 Request(플레이어 정보, 해시정보 로드
-        instance.RequestConnectedPlayerInformation();
+      //  instance.RequestConnectedPlayerInformation();
         //3.해시로드callback받기
         //4. Request Buffered RPC
         Debug.Log("Connection..."+success);
         return success;
     }
 
-    private void RequestConnectedPlayerInformation()
+   /* private void RequestConnectedPlayerInformation()
     {
-        LexNetworkMessage netMessage = new LexNetworkMessage("-1", (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
+        LexNetworkMessage netMessage = new LexNetworkMessage((int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
         networkConnector.EnqueueAMessage(netMessage);
-    }
-    public void RequestBufferedRPCs()
-    {
-        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_RPCbuffer);
-        networkConnector.EnqueueAMessage(netMessage);
-    }
-
+    }*/
     public static bool Reconnect() {
         return true;
     }
@@ -131,6 +138,19 @@ public class LexNetwork : MonobehaviourLexCallbacks
         instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, null, dataTypes,parameters);
         return go;
     }
+
+    internal static void PrintStringToCode(string str)
+    {
+        char[] arr = str.ToCharArray();
+        string code = "";
+        foreach (char c in arr)
+        {
+            code += " " + (int)c;
+        }
+        Debug.Log(code);
+        Debug.Log(str);
+    }
+
     public static GameObject Instantiate(string prefabName, Vector3 position, Quaternion quaternion, LexView parentView, DataType[] dataTypes, params object[] parameters)
     {
         GameObject go = null;
@@ -518,6 +538,8 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
 
     private void Update()
     {
+        NetTime += Time.deltaTime;
         networkConnector.DequeueReceivedBuffer();
     }
 }
+//Raycast

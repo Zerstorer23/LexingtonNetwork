@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 using UnityEngine;
@@ -31,6 +32,7 @@ public class LexNetworkConnection
     public bool Connect()
     {
         stayConnected = true;
+        callbackHandler.networkConnector = this;
         mySocket = new Socket(
               AddressFamily.InterNetwork,
               SocketType.Stream,
@@ -88,6 +90,7 @@ public class LexNetworkConnection
     {
         //MUTEX
         mutex.WaitOne();
+        Debug.Log("Enqueue "+netMessage.Build());
         sendQueue.Enqueue(netMessage);
         mutex.ReleaseMutex();
         //MUTEX
@@ -129,11 +132,10 @@ public class LexNetworkConnection
 
     private void ListenMessage()
     {
-
-        string str;
         byte[] packet = new byte[BUFFER];
         while (stayConnected)
         {
+            int received = 0;
 
             try
             {
@@ -142,7 +144,8 @@ public class LexNetworkConnection
                 //TODO 
                 // 1 40 / 2 50 
                 // c# socket buffer 늘리기
-                mySocket.Receive(packet);
+                received = mySocket.Receive(packet);
+                Debug.Log("Received bytes " + received);
                 //[----------------]
                 //"333" <- 6
                 //"22" <-4
@@ -153,14 +156,21 @@ public class LexNetworkConnection
                 Debug.Log("Socket error");
                 return;
             }
-            MemoryStream ms2 = new MemoryStream(packet);
-            BinaryReader br = new BinaryReader(ms2);
-            str = br.ReadString();
+           // char[] characters = 
+          //  MemoryStream ms2 = new MemoryStream(packet);
+         //   MemoryStream ms2 = new MemoryStream(packet,0,received);
+          //  BinaryReader br = new BinaryReader(ms2);
+            string str = Encoding.UTF8.GetString(packet,0,received);
+            // string str = br.ReadString();
+            Debug.Log("string length " + str.Length);
+            LexNetwork.PrintStringToCode(str);
+            //맨끝이 null문자인지 확인
+            //TODO <- str print 무슨 값이 들어간건지.
             receivedQueue.Enqueue(str);
            // Debug.Log("size "+str.Length);
             Debug.Log(receivedQueue.Count+ "/ 수신한 메시지:" + str);
-            br.Close();
-            ms2.Close();
+           //br.Close();
+           // ms2.Close();
 
         }
 
