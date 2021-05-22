@@ -999,6 +999,33 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 651770526}
   m_CullTransparentMesh: 0
+--- !u!1 &719548026 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6131658141853961851, guid: e14563fe83fc63743a6f7e45010ab48a,
+    type: 3}
+  m_PrefabInstance: {fileID: 980710242}
+  m_PrefabAsset: {fileID: 0}
+--- !u!50 &719548027
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 719548026}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 0
 --- !u!1 &767706150
 GameObject:
   m_ObjectHideFlags: 0
@@ -1342,7 +1369,7 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 980710242}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 719548026}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04b40f5a9ab77be4faf4b3eaab3df3cd, type: 3}

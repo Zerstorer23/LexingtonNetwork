@@ -89,11 +89,12 @@ public enum LexCallback
 {
     None, PlayerJoined, PlayerDisconnected, OnLocalPlayerJoined, MasterClientChanged,
     BufferedRPCsLoaded,
-    RoomInformationReceived
+    RoomInformationReceived,
+    PushServerTime
 }
-public enum LexRequest
+public enum  LexRequest
 {
-    None, RemoveRPC_ViewID, RemoveRPC_Player, Receive_Initialise, Receive_RPCbuffer
+    None, RemoveRPC_ViewID, RemoveRPC_Player, Receive_Initialise, Receive_RPCbuffer,Receive_modifiedTime
 }
 /*
 
