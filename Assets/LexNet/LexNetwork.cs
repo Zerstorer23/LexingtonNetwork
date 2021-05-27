@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System;
 using static LexNetworkConnection;
+using System.Linq;
+
 public class LexNetwork : MonobehaviourLexCallbacks
 {
     private static Dictionary<int, LexView> viewDictionary = new Dictionary<int, LexView>();
@@ -28,6 +30,7 @@ public class LexNetwork : MonobehaviourLexCallbacks
     public static int countOfPlayersInRoom;
 
     static LexNetworkConnection networkConnector = new LexNetworkConnection();
+    public static LexNetworkWorker networkWorker;
     private static LexNetwork prNetwork;
 
     public static LexNetwork_HashSettings CustomProperty { get; private set; } = new LexNetwork_HashSettings();
@@ -45,11 +48,39 @@ public class LexNetwork : MonobehaviourLexCallbacks
                 }
                 else
                 {
-
+                    prNetwork.Init();
                 }
             }
             return prNetwork;
         }
+    }
+
+    internal void SetMasterClient_Receive(int sentActorNumber, int nextMaster)
+    {
+        //지금마스터 해제
+        //새 마스터 등록
+        //view아이디 owner정보 변경
+        playerDictionary[sentActorNumber].IsMasterClient = false;
+        playerDictionary[nextMaster].IsMasterClient = true;
+        foreach (var entry in viewDictionary) {
+            entry.Value.UpdateOwnership();
+        }
+    }
+
+    internal static void DestoryAll(int playerID)
+    {
+        var viewList = viewDictionary.Values.ToList();
+        foreach (var view in viewList) {
+            if (view.IsRoomView || view.IsSceneView) continue;
+            if (view.creatorActorNr == playerID) {
+                viewDictionary.Remove(view.ViewID);
+            }        
+        }
+    }
+
+    private void Init()
+    {
+        networkWorker = new LexNetworkWorker(this);
     }
 
     internal void SetServerTime(bool isModification, long timeValue)
@@ -83,7 +114,9 @@ public class LexNetwork : MonobehaviourLexCallbacks
         LexNetworkMessage netMessage = new LexNetworkMessage((int)MessageInfo.ServerRequest, (int)LexRequest.Receive_Initialise);
         networkConnector.EnqueueAMessage(netMessage);
     }*/
-    public static bool Reconnect() {
+    public static bool Reconnect()
+    {
+        //TODO
         return true;
     }
 
@@ -93,7 +126,9 @@ public class LexNetwork : MonobehaviourLexCallbacks
 
   
 
-    public static int AllocateViewID() {
+    public static int AllocateViewID()
+    {
+        //TODO
         return 0;
 
     }
@@ -104,7 +139,9 @@ public class LexNetwork : MonobehaviourLexCallbacks
         IsConnected = v;
     }
 
-    public static int AllocateSceneViewID() {
+    public static int AllocateSceneViewID()
+    {
+        //TODO
 
         return 0;
     }
@@ -190,6 +227,7 @@ public class LexNetwork : MonobehaviourLexCallbacks
     }
     #endregion
     static int GetPing() {
+        //TODO
         return 0;
     }
 
@@ -199,6 +237,15 @@ public class LexNetwork : MonobehaviourLexCallbacks
     }
 
     public static bool SetMasterClient(int masterPlayer) {
+        //TODO
+        //actorID , MessageInfo , callbackType, params
+        if (!IsMasterClient) return false;
+        LexNetworkMessage netMessage = new LexNetworkMessage();
+        netMessage.Add(LocalPlayer.actorID);
+        netMessage.Add(MessageInfo.ServerRequest);
+        netMessage.Add(LexRequest.ChangeMasterClient);
+        netMessage.Add(masterPlayer);
+        networkConnector.EnqueueAMessage(netMessage);
         return true;
     }
 
@@ -306,35 +353,24 @@ public class LexNetwork : MonobehaviourLexCallbacks
         //1. 내 송수신버퍼에 actorNumber관련 모든 RPC제거    
         //2. 서버 request 버퍼에 모든 플레이어로부터 rpc제거  <- 이거만 수행
         //3. 서버 callback 수신 rpc 제거
-
+        LexNetworkMessage networkMessage = new LexNetworkMessage();
+        networkMessage.Add(MessageInfo.ServerRequest);
+        networkMessage.Add(LexRequest.RemoveRPC);
+        networkMessage.Add(actorID);
+        networkMessage.Add("-1");
+        networkConnector.EnqueueAMessage(networkMessage);
 
     }
     public static void RemoveRPCs(LexView lv)
     {
-        /*
-        Remove all buffered RPCs from server that were sent via targetPhotonView.The Master Client and the owner of the targetPhotonView may call this.
-
-       This method requires either:
-
-        The targetPhotonView is owned by this client(Instantiated by it).
-This client is the Master Client(can remove any PhotonView's RPCs).
-Parameters
-targetPhotonView    RPCs buffered for this PhotonView get removed from server buffer.
-
-         */
-        //1. 내 송수신버퍼에 actorNumber관련 모든 RPC제거    
-        //2. 서버 request 버퍼에 모든 플레이어로부터 rpc제거  <- 이거만 수행
-        //3. 서버 callback 수신 rpc 제거
-
-
+        LexNetworkMessage networkMessage = new LexNetworkMessage();
+        networkMessage.Add(MessageInfo.ServerRequest);
+        networkMessage.Add(LexRequest.RemoveRPC);
+        networkMessage.Add("-1");
+        networkMessage.Add(lv.ViewID);
+        networkConnector.EnqueueAMessage(networkMessage);
     }
 
-    [SerializeField] LexView testView;
-    private void Start()
-    {
-
-     //   RPC_Send(testView, "DoTest", 1, 1f, 0.22d, "hi");
-    }
     /*
 
 actorNum, RPC [int]viewID [string]FunctionName [object[...]]params

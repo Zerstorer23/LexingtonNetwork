@@ -94,7 +94,7 @@ public enum LexCallback
 }
 public enum  LexRequest
 {
-    None, RemoveRPC_ViewID, RemoveRPC_Player, Receive_Initialise, Receive_RPCbuffer,Receive_modifiedTime
+    None, RemoveRPC, Receive_Initialise, Receive_RPCbuffer,Receive_modifiedTime,ChangeMasterClient
 }
 /*
 

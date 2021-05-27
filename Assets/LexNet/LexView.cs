@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,7 +15,12 @@ public class LexView : MonoBehaviour
     }
     public int ownerActorNr;// InstantiateObject, room이면 마스터id
     public int creatorActorNr;
-    public bool IsMine { get; private set; }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
+    public bool IsMine { 
+        get;
+        private set; }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
+
+ 
+
     public bool IsRoomView { get; private set; }// 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
     public bool IsSceneView { get; private set; } = true; // 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
     public NetPlayer Owner { get; private set; }
@@ -101,8 +107,17 @@ public class LexView : MonoBehaviour
                 Owner = LexNetwork.GetPlayerByID(ownerID);
             }
         }
-        
-
     }
-
+    public void UpdateOwnership() {
+        if (IsRoomView) {
+            IsMine = LexNetwork.IsMasterClient;
+            Owner = LexNetwork.MasterClient;
+        }
+    }
+    private bool GetIsMine()
+    {
+        if (IsSceneView) return true;
+        if (IsRoomView) return LexNetwork.IsMasterClient;
+        return creatorActorNr == LexNetwork.LocalPlayer.actorID;
+    }
 }

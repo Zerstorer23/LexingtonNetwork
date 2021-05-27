@@ -23,16 +23,17 @@ public class LexNetwork_CallbackHandler
         LexCallback callbackType = (LexCallback)cbtNum;
         switch (callbackType)
         {
-            case LexCallback.None:
-                break;
             case LexCallback.PlayerJoined:
+                Handle_Receive_PlayerJoin(netMessage);
                 break;
             case LexCallback.PlayerDisconnected:
+                Handle_Receive_PlayerDisconnect(netMessage);
                 break;
             case LexCallback.RoomInformationReceived:
                 Handle_Receive_RoomInformation(sentActorNumber, netMessage);
                 break;
             case LexCallback.MasterClientChanged:
+                Handle_Receive_SetMasterClient(sentActorNumber,netMessage);
                 break;
             case LexCallback.BufferedRPCsLoaded:
                 Handle_Receive_BufferedRPCs(sentActorNumber);
@@ -42,6 +43,28 @@ public class LexNetwork_CallbackHandler
                 break;
         }
 
+    }
+
+    private void Handle_Receive_SetMasterClient(int sentActorNumber, LexNetworkMessage netMessage)
+    {
+        int nextMaster = Int32.Parse(netMessage.GetNext());
+        LexNetwork.instance.SetMasterClient_Receive(sentActorNumber, nextMaster);
+    }
+
+    private void Handle_Receive_PlayerDisconnect(LexNetworkMessage netMessage)
+    {
+        //remove player dict
+        //local destroy all rpc and obj
+        int disconnActor = Int32.Parse(netMessage.GetNext());
+        LexNetwork.RemovePlayerFromDictionary(disconnActor);
+        LexNetwork.DestoryAll(disconnActor);
+    }
+
+    private void Handle_Receive_PlayerJoin(LexNetworkMessage netMessage)
+    {
+        NetPlayer player = new NetPlayer(false, netMessage);
+        LexNetwork.AddPlayerToDictionary(player);
+        NetworkEventManager.TriggerEvent(LexCallback.PlayerJoined,new NetEventObject(LexCallback.PlayerJoined) {objData = player });
     }
 
     private void Handle_Receive_ServerTime(LexNetworkMessage netMessage)

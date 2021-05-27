@@ -32,9 +32,9 @@ public class MonobehaviourLexCallbacks : MonoBehaviour
 
     private void OnPlayerConnected(NetEventObject arg0)
     {
-        OnPlayerConnected(arg0.intObj);
+        OnPlayerConnected((NetPlayer)arg0.objData);
     }
-    public virtual void OnPlayerConnected(int connectedPlayerNr)
+    public virtual void OnPlayerConnected(NetPlayer newPlayer)
     {
     }
     private void OnPlayerDisconnected(NetEventObject arg0)
