@@ -135,15 +135,9 @@ public class LexNetworkConnection
         byte[] packet = new byte[BUFFER];
         while (stayConnected)
         {
-            int received = 0;
-
+            int received;
             try
             {
-                //서버 40
-                // 40다
-                //TODO 
-                // 1 40 / 2 50 
-                // c# socket buffer 늘리기
                 received = mySocket.Receive(packet);
                 Debug.Log("Received bytes " + received);
                 //[----------------]
@@ -156,21 +150,14 @@ public class LexNetworkConnection
                 Debug.Log("Socket error");
                 return;
             }
-           // char[] characters = 
-          //  MemoryStream ms2 = new MemoryStream(packet);
-         //   MemoryStream ms2 = new MemoryStream(packet,0,received);
-          //  BinaryReader br = new BinaryReader(ms2);
             string str = Encoding.UTF8.GetString(packet,0,received);
             // string str = br.ReadString();
             Debug.Log("string length " + str.Length);
             LexNetwork.PrintStringToCode(str);
             //맨끝이 null문자인지 확인
-            //TODO <- str print 무슨 값이 들어간건지.
             receivedQueue.Enqueue(str);
            // Debug.Log("size "+str.Length);
             Debug.Log(receivedQueue.Count+ "/ 수신한 메시지:" + str);
-           //br.Close();
-           // ms2.Close();
 
         }
 
@@ -247,6 +234,7 @@ public class LexNetworkConnection
         else {
             LexNetwork.SetPlayerCustomProperties(targetHashID,(PlayerProperty) key, value);
         }
+        NetworkEventManager.TriggerEvent(LexCallback.HashChanged, new NetEventObject(LexCallback.HashChanged) { intObj = targetHashID, hashKey = key, hashValue = value });
     }
 
     private void ParseDestroy(int sentActorNumber, LexNetworkMessage netMessage)

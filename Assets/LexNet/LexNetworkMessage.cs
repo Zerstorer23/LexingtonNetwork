@@ -91,6 +91,7 @@ public enum LexCallback
     BufferedRPCsLoaded,
     RoomInformationReceived,
     PushServerTime
+    ,HashChanged
 }
 public enum  LexRequest
 {

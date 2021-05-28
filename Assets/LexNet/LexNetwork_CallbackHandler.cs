@@ -96,8 +96,6 @@ public class LexNetwork_CallbackHandler
             Debug.LogWarning("Not supposed to happen");
             return;
         }
-        //TODO
-
         Debug.Log("Received RPCs");
 
         rpcSynched = true;

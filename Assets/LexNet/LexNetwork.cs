@@ -96,7 +96,6 @@ public class LexNetwork : MonobehaviourLexCallbacks
     }
 
     public static bool ConnectUsingSettings() {
-        //TODO
         //1 소켓 연결
         if (IsConnected) return false;
         bool success = networkConnector.Connect();
@@ -116,11 +115,11 @@ public class LexNetwork : MonobehaviourLexCallbacks
     }*/
     public static bool Reconnect()
     {
-        //TODO
-        return true;
+        return ConnectUsingSettings();
     }
 
     public static void Disconnect() {
+        //TODO destroy all player and obj
         networkConnector.Disconnect();
     }
 
@@ -128,8 +127,7 @@ public class LexNetwork : MonobehaviourLexCallbacks
 
     public static int AllocateViewID()
     {
-        //TODO
-        return 0;
+        return LexNetwork_ViewID_Manager.RequestPrivateViewID();
 
     }
 
@@ -141,9 +139,8 @@ public class LexNetwork : MonobehaviourLexCallbacks
 
     public static int AllocateSceneViewID()
     {
-        //TODO
+        return LexNetwork_ViewID_Manager.RequestRoomViewID();
 
-        return 0;
     }
 
     #region instantiation
@@ -237,7 +234,6 @@ public class LexNetwork : MonobehaviourLexCallbacks
     }
 
     public static bool SetMasterClient(int masterPlayer) {
-        //TODO
         //actorID , MessageInfo , callbackType, params
         if (!IsMasterClient) return false;
         LexNetworkMessage netMessage = new LexNetworkMessage();
@@ -550,7 +546,6 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
 
     internal void RoomProperty_Receive(RoomProperty key, string value) {
         CustomProperty.SetRoomSetting(key, value);
-        //TODO : need to send event [callback]
     }
     public static void SetPlayerCustomProperties(int actorNr, PlayerProperty key, string value)
     {
