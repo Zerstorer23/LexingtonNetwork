@@ -88,14 +88,14 @@ public enum MessageInfo
 public enum LexCallback
 {
     None, PlayerJoined, PlayerDisconnected, OnLocalPlayerJoined, MasterClientChanged,
-    BufferedRPCsLoaded,
+   // BufferedRPCsLoaded,
     RoomInformationReceived,
     PushServerTime
     ,HashChanged
 }
 public enum  LexRequest
 {
-    None, RemoveRPC, Receive_Initialise, Receive_RPCbuffer,Receive_modifiedTime,ChangeMasterClient
+    None, RemoveRPC, ChangeMasterClient, Receive_modifiedTime
 }
 /*
 

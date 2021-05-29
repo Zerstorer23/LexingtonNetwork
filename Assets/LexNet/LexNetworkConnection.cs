@@ -115,13 +115,17 @@ public class LexNetworkConnection
     {
         try
         {
-            byte[] packet = new byte[BUFFER];
+/*            byte[] packet = new byte[BUFFER];
             MemoryStream ms = new MemoryStream(packet);
             BinaryWriter bw = new BinaryWriter(ms);
             bw.Write(str);
             bw.Close();
             ms.Close();
-            mySocket.Send(packet);
+            mySocket.Send(packet);*/
+
+            //Start sending stuf..
+            byte[] byData = System.Text.Encoding.UTF8.GetBytes(str + '\0');
+            mySocket.Send(byData,str.Length+1);
         }
         catch (Exception e)
         {
@@ -273,6 +277,7 @@ public class LexNetworkConnection
             childView.SetInstantiateData(param);
         }
         LexNetwork.AddViewtoDictionary(childView);
+        Debug.Log("Instantiate finished " + netMessage.GetReceivedSize());
     }
 
     private void ParseChat(int sentActorNumber, LexNetworkMessage netMessage)
@@ -352,15 +357,22 @@ public class LexNetworkConnection
     private  Vector3 StringToVector3(string sVector)
     {
         // Remove the parentheses
-        if (sVector.StartsWith("(") && sVector.EndsWith(")"))
+      //  if (sVector.StartsWith("(") && sVector.EndsWith(")"))
         {
-            sVector = sVector.Substring(1, sVector.Length - 2);
+            int start = sVector.IndexOf('(') + 1;
+            int end = sVector.IndexOf(')');
+            sVector = sVector.Substring(start, end -start );
+            Debug.Log("Parenthe removes " + sVector);
         }
 
         // split the items
         string[] sArray = sVector.Split(',');
 
         // store as a Vector3
+        foreach (string s in sArray) {
+            LexNetwork.PrintStringToCode(s);
+            Debug.Log(s + " => " + float.Parse(s));
+        }
         Vector3 result = new Vector3(
             float.Parse(sArray[0]),
             float.Parse(sArray[1]),
@@ -371,10 +383,15 @@ public class LexNetworkConnection
     private Quaternion StringToQuarternion(string sVector)
     {
         // Remove the parentheses
-        if (sVector.StartsWith("(") && sVector.EndsWith(")"))
-        {
-            sVector = sVector.Substring(1, sVector.Length - 2);
-        }
+        /*  if (sVector.StartsWith("(") && sVector.EndsWith(")"))
+          {
+              sVector = sVector.Substring(1, sVector.Length - 2);
+          }*/
+
+        int start = sVector.IndexOf('(') + 1;
+        int end = sVector.IndexOf(')');
+        sVector = sVector.Substring(start, end - start);
+        Debug.Log("Parenthe removes " + sVector);
 
         // split the items
         string[] sArray = sVector.Split(',');

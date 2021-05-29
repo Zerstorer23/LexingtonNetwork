@@ -35,8 +35,8 @@ public class LexNetwork_CallbackHandler
             case LexCallback.MasterClientChanged:
                 Handle_Receive_SetMasterClient(sentActorNumber,netMessage);
                 break;
-            case LexCallback.BufferedRPCsLoaded:
-                Handle_Receive_BufferedRPCs(sentActorNumber);
+            case LexCallback.OnLocalPlayerJoined:
+                Handle_Receive_LocalJoinFinish(sentActorNumber);
                 break;
             case LexCallback.PushServerTime:
                 Handle_Receive_ServerTime(netMessage);
@@ -69,41 +69,31 @@ public class LexNetwork_CallbackHandler
 
     private void Handle_Receive_ServerTime(LexNetworkMessage netMessage)
     {
-        //LEX / 0 =SERVER / PING=MESSAGEINFO / targetPlater /1 OR 0 = INDEX TO REFER / SERVERTIME or EXPECTEDDELAY
+        //LEX / 0 =SERVER / PING=MESSAGEINFO / targetPlater /1 OR 0 = INDEX TO REFER / SERVERTIME or EXPECTEDDELAY //Part of local Join
         int targetPlayer = Int32.Parse(netMessage.GetNext());
         bool isModification = Int32.Parse(netMessage.GetNext()) != 0;
         long timeValue = long.Parse(netMessage.GetNext());
+        bool requestBufferedRPCs = Int32.Parse(netMessage.GetNext()) != 0;
         Debug.Log("Received servertime " + isModification + " / " + timeValue);
         Debug.Assert(targetPlayer == LexNetwork.LocalPlayer.actorID, "Received wrong message");
         LexNetwork.instance.SetServerTime(isModification, timeValue);
         if (!isModification)
         {
-            RequestServerTime(true);
-        }
-        else {
-            timeSynched = true;
-            if (rpcSynched)
-            {
-                LexNetwork.instance.SetConnected(true);
-                NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
-            }
+            RequestServerTime(true, requestBufferedRPCs);
         }
     }
 
-    private void Handle_Receive_BufferedRPCs(int sentActorNumber)
+    private void Handle_Receive_LocalJoinFinish(int sentActorNumber)
     {
-        if (sentActorNumber != LexNetwork.LocalPlayer.actorID) {
+        if (sentActorNumber != LexNetwork.LocalPlayer.actorID)
+        {
             Debug.LogWarning("Not supposed to happen");
             return;
         }
-        Debug.Log("Received RPCs");
-
-        rpcSynched = true;
-        if (timeSynched)
-        {
-            LexNetwork.instance.SetConnected(true);
-            NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
-        }
+        Debug.Log("Received RPCs and finished join");
+        Debug.Assert(LexNetwork.IsConnected == false, "Connected but received rpc?");
+        LexNetwork.instance.SetConnected(true);
+        NetworkEventManager.TriggerEvent(LexCallback.OnLocalPlayerJoined, null);
     }
 
     private void Handle_Receive_RoomInformation(int sentActorNumber, LexNetworkMessage netMessage)
@@ -147,25 +137,21 @@ public class LexNetwork_CallbackHandler
             LexNetwork.AddPlayerToDictionary(player);
             count++;
         }
-        
-        RequestBufferedRPCs();
-        RequestServerTime(false);
+        //.1 소켓접속, 2. 룸정보 받기 , 3. bufferedrpc 받기, 4. 서버시간 받기,
     }
 
-    public void RequestBufferedRPCs()
-    {
-        Debug.Log("Request buffered rpcs");
-        LexNetworkMessage netMessage = new LexNetworkMessage(LexNetwork.LocalPlayer.actorID, (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_RPCbuffer);
-        networkConnector.EnqueueAMessage(netMessage);
+    void SyncNetworkTime() {
+        RequestServerTime(false, false);
     }
 
-
-    void RequestServerTime(bool requestModification)
+    void RequestServerTime(bool requestModification, bool requestBufferedRPCs)
     {
+        //LEX / 0 =SERVER / PING=MESSAGEINFO / targetPlater /1 OR 0 = INDEX TO REFER / SERVERTIME or EXPECTEDDELAY
         Debug.Log("Request servertime "+requestModification);
         LexNetworkMessage requestMessage = new LexNetworkMessage(
                LexNetwork.LocalPlayer.actorID, (int)MessageInfo.ServerRequest, (int)LexRequest.Receive_modifiedTime,
-                LexNetwork.LocalPlayer.actorID, (requestModification)?"1":"0", "0"
+                LexNetwork.LocalPlayer.actorID, (requestModification)?"1":"0","0"
+                , (requestBufferedRPCs) ? "1" : "0"
                );
         networkConnector.EnqueueAMessage(requestMessage);
     }
