@@ -17,14 +17,9 @@ public class LexNetwork_HashSettings
         }
         return RoomHash[key];
     }
-    public void SetRoomSetting(RoomProperty key, string value) {
-        if (!RoomHash.ContainsKey(key))
-        {
-            RoomHash.Add(key, value);
-        }
-        else {
-            RoomHash[key] = value;
-        }
+    public void SetRoomSetting(LexHashTable hash) {
+
+
     }
 
 }

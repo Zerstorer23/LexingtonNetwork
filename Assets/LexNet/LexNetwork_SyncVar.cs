@@ -15,7 +15,8 @@ public abstract class LexNetwork_SyncVar : MonoBehaviour
 
 
     public void PushSync(DataType[] dataTypes, params object[] parameters) {
-        LexNetwork.SyncVar_Send(lv, dataTypes, parameters);
+      
+        LexNetwork.instance.SyncVar_Send(lv, dataTypes, parameters);
     }
     private void Update()
     {

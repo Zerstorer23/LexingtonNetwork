@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,6 +9,7 @@ public class LexView : MonoBehaviour
 {
    [SerializeField] private int prViewID = -1;
     private bool requestSceneviewID = true;
+    public PhotonView pv;
    public int ViewID
     {
         get { return prViewID; }
@@ -17,13 +19,14 @@ public class LexView : MonoBehaviour
     public int creatorActorNr;
     public bool IsMine { 
         get;
-        private set; }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
+        private set; 
+    }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
 
  
 
     public bool IsRoomView { get; private set; }// 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
     public bool IsSceneView { get; private set; } = true; // 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
-    public NetPlayer Owner { get; private set; }
+    public LexPlayer Owner { get; private set; }
     object[] InstantiationData;
 
     /*
@@ -57,20 +60,18 @@ public class LexView : MonoBehaviour
     public LexNetwork_SyncVar serializedView;
     private void Awake()
     {
+        pv = GetComponent<PhotonView>();
         serializedView = GetComponent<LexNetwork_SyncVar>();
         if (!Application.isPlaying && requestSceneviewID) {
-            prViewID = LexNetwork_ViewID_Manager.RequestRoomViewID();
+            prViewID = LexViewManager.RequestSceneViewID();
             IsMine = true;
+            IsSceneView = true;
             requestSceneviewID = true;
-            LexNetwork.AddViewtoDictionary(this);
+            //TODO SceneView add to dictionary on start
             //세거나 저장하거나..
             //
             //매번 세서 순서대로 번호를 붙이는게
         }
-    }
-    private void Start()
-    {
-        
     }
 
     public void ReceiveSerializedVariable(params object[] parameters) {
@@ -107,6 +108,7 @@ public class LexView : MonoBehaviour
                 Owner = LexNetwork.GetPlayerByID(ownerID);
             }
         }
+        LexViewManager.AddViewtoDictionary(this);
     }
     public void UpdateOwnership() {
         if (IsRoomView) {

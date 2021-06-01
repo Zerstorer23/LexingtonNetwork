@@ -5,9 +5,6 @@ using UnityEngine;
 
 public class LexNetwork_CallbackHandler
 {
-    public LexNetworkConnection networkConnector;
-    bool timeSynched = false;
-    bool rpcSynched = false;
     public void ParseCallback(int sentActorNumber, LexNetworkMessage netMessage)
     {
         //actorID , MessageInfo , callbackType, params
@@ -56,15 +53,15 @@ public class LexNetwork_CallbackHandler
         //remove player dict
         //local destroy all rpc and obj
         int disconnActor = Int32.Parse(netMessage.GetNext());
-        LexNetwork.RemovePlayerFromDictionary(disconnActor);
-        LexNetwork.DestoryAll(disconnActor);
+        LexNetwork.instance.RemovePlayerFromDictionary(disconnActor);
+        LexNetwork.DestroyPlayerObjects(disconnActor, true);
     }
 
     private void Handle_Receive_PlayerJoin(LexNetworkMessage netMessage)
     {
-        NetPlayer player = new NetPlayer(false, netMessage);
-        LexNetwork.AddPlayerToDictionary(player);
-        NetworkEventManager.TriggerEvent(LexCallback.PlayerJoined,new NetEventObject(LexCallback.PlayerJoined) {objData = player });
+        LexPlayer player = new LexPlayer(false, netMessage);
+        LexNetwork.instance.AddPlayerToDictionary(player);
+        NetworkEventManager.TriggerEvent(LexCallback.PlayerJoined,new NetEventObject() {objData = player });
     }
 
     private void Handle_Receive_ServerTime(LexNetworkMessage netMessage)
@@ -114,28 +111,24 @@ public class LexNetwork_CallbackHandler
         //params = [int]numPlayers(local Included) , LocalPlayerInfo , players[...
         //Player Info = actorID, isMaster, customprop[num prop]
         //Load Room
-        int numRoomHash = Int32.Parse(netMessage.GetNext());
-        int count = 0;
-        Debug.Log("Number of room hash : " + numRoomHash);
-        while (count < numRoomHash) {
-            RoomProperty key = (RoomProperty)Int32.Parse(netMessage.GetNext());
+        int numHash = Int32.Parse(netMessage.GetNext());
+        Debug.Log("Number of room hash : " + numHash);
+        for (int count = 0; count < numHash; count ++) {
+            int key = Int32.Parse(netMessage.GetNext());
             string value = netMessage.GetNext();
-            Debug.Log("room hash : " + key+" / "+value);
-            LexNetwork.instance.RoomProperty_Receive(key, value);
-            count++;
+            Debug.Log("room hash : " +(RoomProperty) key+" / "+value);
+            LexNetwork.CustomProperties.Add(key, value);
         }
 
         //Load Players
         int numPlayers = Int32.Parse(netMessage.GetNext());
-        Debug.Log("Number of Players: " + numRoomHash);
-        count = 1;
-        NetPlayer localPlayer = new NetPlayer(true, netMessage);
-        LexNetwork.SetLocalPlayer(localPlayer);
-        while (count < numPlayers)
+        Debug.Log("Number of Players: " + numPlayers);
+        LexPlayer localPlayer = new LexPlayer(true, netMessage);
+        LexNetwork.instance.SetLocalPlayer(localPlayer);
+        for (int count = 0; count < numHash; count++)
         {
-            NetPlayer player = new NetPlayer(false, netMessage);
-            LexNetwork.AddPlayerToDictionary(player);
-            count++;
+            LexPlayer player = new LexPlayer(false, netMessage);
+            LexNetwork.instance.AddPlayerToDictionary(player);
         }
         //.1 소켓접속, 2. 룸정보 받기 , 3. bufferedrpc 받기, 4. 서버시간 받기,
     }
@@ -153,7 +146,7 @@ public class LexNetwork_CallbackHandler
                 LexNetwork.LocalPlayer.actorID, (requestModification)?"1":"0","0"
                 , (requestBufferedRPCs) ? "1" : "0"
                );
-        networkConnector.EnqueueAMessage(requestMessage);
+        LexNetwork.networkConnector.EnqueueAMessage(requestMessage);
     }
 }
 

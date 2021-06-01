@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,32 +13,10 @@ public class MonobehaviourLexCallbacks : MonoBehaviour
         NetworkEventManager.StartListening(LexCallback.OnLocalPlayerJoined, OnLocalPlayerJoined);
         NetworkEventManager.StartListening(LexCallback.MasterClientChanged, OnMasterChanged);
         NetworkEventManager.StartListening(LexCallback.HashChanged, OnHashChanged);
+        NetworkEventManager.StartListening(LexCallback.Disconnected, OnDisconnected);
     }
-
-    private void OnHashChanged(NetEventObject arg0)
+    private void OnDisable()
     {
-        //        NetworkEventManager.TriggerEvent(LexCallback.HashChanged, new NetEventObject(LexCallback.HashChanged) { intObj = targetHashID, hashKey = key, hashValue = value });
-        int target = arg0.intObj;
-        int key = arg0.hashKey;
-        string value = arg0.hashValue;
-        if (target == 0)
-        {
-            OnRoomSettingsChanged((RoomProperty)key, value);
-        }
-        else
-        {
-            OnPlayerSettingsChanged(LexNetwork.GetPlayerByID(key),(PlayerProperty)key, value);
-        }
-    }
-    public virtual void OnRoomSettingsChanged(RoomProperty key, string value) {
-
-    }
-    public virtual void OnPlayerSettingsChanged(NetPlayer player, PlayerProperty key, string value)
-    {
-
-    }
-
-    private void OnDisable() {
         NetworkEventManager.StopListening(LexCallback.PlayerDisconnected, OnPlayerDisconnected);
         NetworkEventManager.StopListening(LexCallback.PlayerJoined, OnPlayerConnected);
         NetworkEventManager.StopListening(LexCallback.OnLocalPlayerJoined, OnLocalPlayerJoined);
@@ -45,6 +24,38 @@ public class MonobehaviourLexCallbacks : MonoBehaviour
         NetworkEventManager.StopListening(LexCallback.MasterClientChanged, OnMasterChanged);
         NetworkEventManager.StopListening(LexCallback.HashChanged, OnHashChanged);
     }
+
+    private void OnDisconnected(NetEventObject arg0)
+    {
+        OnDisconnected();
+    }
+    public virtual void OnDisconnected() { 
+    
+    }
+
+    private void OnHashChanged(NetEventObject arg0)
+    {
+        //        NetworkEventManager.TriggerEvent(LexCallback.HashChanged, new NetEventObject(LexCallback.HashChanged) { intObj = targetHashID, hashKey = key, hashValue = value });
+        int target = arg0.intObj;
+        LexHashTable hashChanged =(LexHashTable) arg0.objData;
+        if (target == 0)
+        {
+            OnRoomSettingsChanged(hashChanged);
+        }
+        else
+        {
+            OnPlayerSettingsChanged(LexNetwork.GetPlayerByID(target), hashChanged);
+        }
+    }
+    public virtual void OnRoomSettingsChanged(LexHashTable hashChanged)
+    {
+
+    }
+    public virtual void OnPlayerSettingsChanged(LexPlayer player, LexHashTable hashChanged)
+    {
+
+    }
+
 
     private void OnMasterChanged(NetEventObject arg0)
     {
@@ -56,9 +67,9 @@ public class MonobehaviourLexCallbacks : MonoBehaviour
 
     private void OnPlayerConnected(NetEventObject arg0)
     {
-        OnPlayerConnected((NetPlayer)arg0.objData);
+        OnPlayerConnected((LexPlayer)arg0.objData);
     }
-    public virtual void OnPlayerConnected(NetPlayer newPlayer)
+    public virtual void OnPlayerConnected(LexPlayer newPlayer)
     {
     }
     private void OnPlayerDisconnected(NetEventObject arg0)

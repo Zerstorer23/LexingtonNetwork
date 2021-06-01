@@ -16,10 +16,9 @@ public class NetEventObject
     public string stringObj;
     public int hashKey;
     public string hashValue;
-    public NetEventObject(LexCallback id) {
-        this.callbackID = id;
+    public NetEventObject() {
     }
-    
+
 
 }
 

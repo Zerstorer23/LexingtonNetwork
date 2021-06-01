@@ -17,7 +17,7 @@ public class UI_Button : MonoBehaviour
     [SerializeField] LexView testView;
     public Vector3 targetPos;
     public void OnClick_MoveRPC() {
-        LexNetwork.RPC_Send(testView, "Move",
+        LexNetwork.instance.RPC_Send(testView, "Move",
             new DataType[] {DataType.VECTOR3},
             targetPos
             );
@@ -32,10 +32,14 @@ public class UI_Button : MonoBehaviour
     }
     public void OnClick_RoomHash()
     {
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100)+"");
+        LexHashTable hash = new LexHashTable();
+        hash.Add(RoomProperty.GameMode, Random.Range(0, 100) + "");
+        LexNetwork.SetRoomCustomProperties(hash);
     }
     public void OnClick_PlayerHash()
     {
-        LexNetwork.SetPlayerCustomProperties(LexNetwork.LocalPlayer.actorID, PlayerProperty.NickName, Random.Range(0, 100) + "");
+        LexHashTable hash = new LexHashTable();
+        hash.Add(PlayerProperty.NickName, Random.Range(0, 100) + "");
+        LexNetwork.SetPlayerCustomProperties(hash);
     }
 }

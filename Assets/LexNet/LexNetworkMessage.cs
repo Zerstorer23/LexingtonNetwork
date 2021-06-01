@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using static LexNetworkConnection;
+using static LexNetwork_MessageHandler;
 
 public class LexNetworkMessage 
 {
@@ -15,6 +15,10 @@ public class LexNetworkMessage
     public LexNetworkMessage(params object[] strings)
     {
         paramQueue = new List<object>(strings);
+    }
+    public void Add(int s)
+    {
+        paramQueue.Add(s.ToString());
     }
     public void Add(string s) {
         paramQueue.Add(s);
@@ -91,7 +95,8 @@ public enum LexCallback
    // BufferedRPCsLoaded,
     RoomInformationReceived,
     PushServerTime
-    ,HashChanged
+    ,HashChanged,
+    Disconnected
 }
 public enum  LexRequest
 {
