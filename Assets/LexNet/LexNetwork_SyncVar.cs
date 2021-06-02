@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class LexNetwork_SyncVar : MonoBehaviour
+public abstract class LexNetwork_SyncVar : MonoBehaviourLex
 {
     protected bool isWriting = false;
     LexView lv;
@@ -14,9 +14,9 @@ public abstract class LexNetwork_SyncVar : MonoBehaviour
     public abstract void OnSyncView(params object[] parameters);
 
 
-    public void PushSync(DataType[] dataTypes, params object[] parameters) {
-      
-        LexNetwork.instance.SyncVar_Send(lv, dataTypes, parameters);
+    public void PushSync( params object[] parameters) {
+        
+        LexNetwork.instance.SyncVar_Send(lv, parameters);
     }
     private void Update()
     {

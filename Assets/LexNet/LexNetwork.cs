@@ -29,8 +29,30 @@ public partial class LexNetwork : MonobehaviourLexCallbacks
     public static double NetTime { get; private set; }
     public static bool IsConnected { get; private set; }
     public static bool IsMasterClient { get; private set; }
+    public static LexPlayer[] PlayerList { get { return GetPlayerList(); } }
+    public static LexPlayer[] PlayerListOthers{ get { return GetPlayerListOthers();} }
+    public static int PlayerCount { get { return GetPlayerCount(); } }
+
 
     public static LexPlayer LocalPlayer { get; private set; }
+
+    public static T GetLocalPlayer<T>()
+    {
+        return (useLexNet) ? (T)(object)LocalPlayer : (T)(object)PhotonNetwork.LocalPlayer;
+    }
+    public static T GetMasterClient<T>()
+    {
+        return (useLexNet) ? (T)(object)MasterClient : (T)(object)PhotonNetwork.MasterClient;
+    }
+    public static T[] GetPlayerList<T>()
+    {
+        return (useLexNet) ? (T[])(object)PlayerList : (T[])(object)PhotonNetwork.PlayerList;
+    }
+    public static T[] GetPlayerListOthers<T>()
+    {
+        return (useLexNet) ? (T[])(object)PlayerListOthers : (T[])(object)PhotonNetwork.PlayerListOthers;
+    }
+
     public static LexPlayer MasterClient { get; private set; }
     public static LexHashTable CustomProperties { get; private set; } = new LexHashTable();
 
@@ -169,7 +191,7 @@ public partial class LexNetwork : MonobehaviourLexCallbacks
     }
 
     #region instantiation
-    public static GameObject Instantiate(string prefabName, Vector3 position, Quaternion quaternion, byte group = 0, DataType[] dataTypes =null,object[] parameters = null)
+    public static GameObject Instantiate(string prefabName, Vector3 position, Quaternion quaternion, byte group = 0, object[] parameters = null)
     {
      
         if (!useLexNet)
@@ -181,12 +203,12 @@ public partial class LexNetwork : MonobehaviourLexCallbacks
         LexView lv = go.GetComponent<LexView>();
         lv.SetInstantiateData(parameters);
         lv.SetInformation(LexViewManager.RequestPrivateViewID(), LocalPlayer.actorID, LocalPlayer.actorID, false);
-        instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, null, dataTypes, parameters);
+        instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, null, parameters);
         return go;
     }
 
 
-    public static GameObject InstantiateRoomObject(string prefabName, Vector3 position, Quaternion quaternion, byte group = 0, DataType[] dataTypes = null, object[] parameters = null)
+    public static GameObject InstantiateRoomObject(string prefabName, Vector3 position, Quaternion quaternion, byte group = 0,object[] parameters = null)
     {
         if (!useLexNet)
         {   //NOTE object not need parse
@@ -207,8 +229,11 @@ public partial class LexNetwork : MonobehaviourLexCallbacks
         {   //NOTE object not need parse
             return PhotonNetwork.GetPing();
         }
-        //TODO
-        return 0;
+        if (NetTime > instance.lastReceivedPing + instance.pingPeriodInSec) {
+            instance.SendPing();
+        }
+        double ping = (instance.lastReceivedPing - instance.lastSentPing)*1000;
+        return (int)ping;
     }
 
 

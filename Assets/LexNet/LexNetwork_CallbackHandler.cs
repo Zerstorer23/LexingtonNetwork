@@ -9,13 +9,6 @@ public class LexNetwork_CallbackHandler
     {
         //actorID , MessageInfo , callbackType, params
         string cbt = netMessage.GetNext();
-        char[] arr = cbt.ToCharArray();
-        string code = "";
-        foreach (char c in arr) {
-            code += " " + (int)c;
-        }
-        Debug.Log(code);
-        Debug.Log("Callback type " + cbt);
         int cbtNum = Int32.Parse(cbt);
         LexCallback callbackType = (LexCallback)cbtNum;
         switch (callbackType)
@@ -38,10 +31,48 @@ public class LexNetwork_CallbackHandler
             case LexCallback.PushServerTime:
                 Handle_Receive_ServerTime(netMessage);
                 break;
+            case LexCallback.Ping_Received:
+                Handle_Receive_Ping(netMessage);
+                break;
         }
 
     }
 
+    private void Handle_Receive_Ping(LexNetworkMessage netMessage)
+    {
+        LexNetwork.instance.ReceivePing();
+    }
+
+    public void ParseRequest(int sentActorNumber, LexNetworkMessage netMessage)
+    {
+        //actorID , MessageInfo , callbackType, params
+        string cbt = netMessage.GetNext();
+        Debug.Log("Callback type " + cbt);
+        int cbtNum = Int32.Parse(cbt);
+        LexCallback callbackType = (LexCallback)cbtNum;
+        switch (callbackType)
+        {
+            case LexCallback.PlayerJoined:
+                Handle_Receive_PlayerJoin(netMessage);
+                break;
+            case LexCallback.PlayerDisconnected:
+                Handle_Receive_PlayerDisconnect(netMessage);
+                break;
+            case LexCallback.RoomInformationReceived:
+                Handle_Receive_RoomInformation(sentActorNumber, netMessage);
+                break;
+            case LexCallback.MasterClientChanged:
+                Handle_Receive_SetMasterClient(sentActorNumber, netMessage);
+                break;
+            case LexCallback.OnLocalPlayerJoined:
+                Handle_Receive_LocalJoinFinish(sentActorNumber);
+                break;
+            case LexCallback.PushServerTime:
+                Handle_Receive_ServerTime(netMessage);
+                break;
+        }
+
+    }
     private void Handle_Receive_SetMasterClient(int sentActorNumber, LexNetworkMessage netMessage)
     {
         int nextMaster = Int32.Parse(netMessage.GetNext());

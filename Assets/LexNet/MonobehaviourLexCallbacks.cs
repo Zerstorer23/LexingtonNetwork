@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MonobehaviourLexCallbacks : MonoBehaviour
+public class MonobehaviourLexCallbacks : MonoBehaviourLex
 {
     private void OnEnable()
     {

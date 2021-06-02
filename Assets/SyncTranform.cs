@@ -1,13 +1,16 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class SyncTranform : LexNetwork_SyncVar
 {
     Vector3 oldPos = Vector3.zero;
-
-    public void Move(object[] position) {
-        transform.position = (Vector3)position[0];
+    
+    [LexRPC]
+    public void Move(Vector3 position, string message) {
+        transform.position = position;
+        Debug.Log(message);
     }
 
 
@@ -17,7 +20,7 @@ public class SyncTranform : LexNetwork_SyncVar
         {
             if (transform.position == oldPos) return;
             oldPos = transform.position;
-            PushSync(new DataType[] { DataType.VECTOR3 }, transform.position);
+            PushSync(transform.position);
         }
         else {
             Vector3 pos = (Vector3)parameters[0];

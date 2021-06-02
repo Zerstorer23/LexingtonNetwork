@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
@@ -75,9 +76,9 @@ public class LexViewManager : MonoBehaviour
         } 
     }
 
-    internal static List<LexView> GetViewList()
+    internal static LexView[] GetViewList()
     {
-        return new List<LexView>(viewDictionary.Values);
+        return viewDictionary.Values.ToArray();
     }
 
     public static void AddViewtoDictionary(LexView lv)

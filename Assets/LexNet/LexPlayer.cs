@@ -4,20 +4,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LexPlayer 
+public class LexPlayer
 {
-    public Player pPlayer;
-    bool isLocal;
+    public  bool IsLocal { get; private set; }
     object tagObject;
     public int actorID;
-    public string NickName {
+   public Player pPlayer;
+    public new string NickName {
         get { return NickName; }
         set => SetNickName(value);
        }
 
-
-    public bool IsMasterClient;
-    public LexHashTable CustomProperties { get; private set; }
+    public  bool IsMasterClient;
+    public  LexHashTable CustomProperties { get; private set; }
     public static readonly string default_name = "ㅇㅇ";
 
  /*   public NetPlayer(bool isLocal, int actorID, string name) {
@@ -29,7 +28,7 @@ public class LexPlayer
 */
     public LexPlayer(bool isLocal, LexNetworkMessage netMessage)
     {
-        this.isLocal = isLocal;
+        this.IsLocal = isLocal;
         CustomProperties = new LexHashTable(this);
         this.actorID = Int32.Parse(netMessage.GetNext());
         this.IsMasterClient = netMessage.GetNext() == "1";

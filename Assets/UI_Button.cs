@@ -17,10 +17,7 @@ public class UI_Button : MonoBehaviour
     [SerializeField] LexView testView;
     public Vector3 targetPos;
     public void OnClick_MoveRPC() {
-        LexNetwork.instance.RPC_Send(testView, "Move",
-            new DataType[] {DataType.VECTOR3},
-            targetPos
-            );
+        testView.RPC("Move", Photon.Pun.RpcTarget.All, targetPos, "hi");
     }
     public void OnClick_Instantiate()
     {

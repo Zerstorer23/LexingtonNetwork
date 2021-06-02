@@ -7,27 +7,44 @@ using UnityEngine;
 [ExecuteAlways]
 public class LexView : MonoBehaviour
 {
-   [SerializeField] private int prViewID = -1;
+    [SerializeField] private int prViewID = -1;
     private bool requestSceneviewID = true;
     public PhotonView pv;
-   public int ViewID
+    public int ViewID
     {
         get { return prViewID; }
         private set { }
     }
     public int ownerActorNr;// InstantiateObject, room이면 마스터id
     public int creatorActorNr;
-    public bool IsMine { 
+    public bool IsMine {
         get;
-        private set; 
+        private set;
     }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
 
- 
+
 
     public bool IsRoomView { get; private set; }// 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
     public bool IsSceneView { get; private set; } = true; // 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
     public LexPlayer Owner { get; private set; }
+    public MonoBehaviourLex[] RpcMonoBehaviours { get; private set; }
+
     object[] InstantiationData;
+
+
+    public static LexView Get(Component component)
+    {
+        return component.transform.GetParentComponent<LexView>();
+    }
+
+    public static LexView Get(GameObject gameObj)
+    {
+        return gameObj.transform.GetParentComponent<LexView>();
+    }
+    public void RefreshRpcMonoBehaviourCache()
+    {
+        this.RpcMonoBehaviours = this.GetComponents<MonoBehaviourLex>();
+    }
 
     /*
      씬 :IsMine = true, 
@@ -52,7 +69,7 @@ public class LexView : MonoBehaviour
                                 ->RoomInstantiateReceive시 각자 자기 데이터 업데이트
    
     개인뷰 => OwnerID ~ n9999 //카운터 각자
-     */ 
+     */
     //카운터는 HashSet형으로 관리후 삭제시 remove
     //1~9999 Queue에 등록
     //remove된iD queue에 추가
@@ -62,6 +79,7 @@ public class LexView : MonoBehaviour
     {
         pv = GetComponent<PhotonView>();
         serializedView = GetComponent<LexNetwork_SyncVar>();
+        RefreshRpcMonoBehaviourCache();
         if (!Application.isPlaying && requestSceneviewID) {
             prViewID = LexViewManager.RequestSceneViewID();
             IsMine = true;
@@ -122,4 +140,14 @@ public class LexView : MonoBehaviour
         if (IsRoomView) return LexNetwork.IsMasterClient;
         return creatorActorNr == LexNetwork.LocalPlayer.actorID;
     }
+    public void RPC(string methodName,RpcTarget target, params object[] parameters) {
+        if (!LexNetwork.useLexNet)
+        {
+            pv.RPC(methodName, target, parameters);
+        }
+        else {
+            LexNetwork.instance.RPC_Send(this, methodName, parameters);
+        }
+    }
+
 }

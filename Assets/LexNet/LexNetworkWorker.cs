@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 
@@ -8,7 +10,18 @@ public partial class LexNetwork
 
     private static Dictionary<int, LexPlayer> playerDictionary = new Dictionary<int, LexPlayer>();
     private Mutex playerDictionaryMutex = new Mutex();
+    private static LexPlayer[] GetPlayerList()
+    {
+        return playerDictionary.Values.ToArray();
+    }
+    private static LexPlayer[] GetPlayerListOthers()
+    {
+        return playerDictionary.Values.OrderBy((x) => x.actorID).Where(x => !x.IsLocal).ToArray();
+    }
+    private static int GetPlayerCount() {
 
+        return (useLexNet)?playerDictionary.Count : PhotonNetwork.CurrentRoom.PlayerCount;
+    }
     internal static void PrintStringToCode(string str)
     {
         char[] arr = str.ToCharArray();
@@ -87,27 +100,18 @@ public partial class LexNetwork
     {
 
     }
-    public void Instantiate_Send(int viewID, int ownerID, string prefabName, Vector3 position, Quaternion quaternion, DataType[] dataTypes, params object[] parameters)
+    public void Instantiate_Send(int viewID, int ownerID, string prefabName, Vector3 position, Quaternion quaternion,params object[] parameters)
     {
         LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Instantiate, viewID, ownerID, prefabName, position, quaternion);
-        netMessage.EncodeParameters(dataTypes, parameters);
+        netMessage.EncodeParameters( parameters);
         networkConnector.EnqueueAMessage(netMessage);
     }
-    public void RPC_Receive(int viewID, string functionName, params object[] parameters)
-    {
-        if (debugLexNet) {
-            foreach (object obj in parameters) Debug.Log(obj);
-        }
-        LexView lv = LexViewManager.GetViewByID(viewID);
-        if (!lv) return;
-        lv.gameObject.SendMessage(functionName, parameters);
-    }
 
 
-    public void SyncVar_Send(LexView lv, DataType[] dataTypes, params object[] parameters)
+    public void SyncVar_Send(LexView lv, params object[] parameters)
     {
         LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.SyncVar, lv.ViewID);
-        netMessage.EncodeParameters(dataTypes, parameters);
+        netMessage.EncodeParameters(parameters);
         networkConnector.EnqueueAMessage(netMessage);
     }
     public void SyncVar_Receive(int viewID, params object[] parameters)
@@ -137,15 +141,7 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
 
 
 */
-    // RPC-send(NewsStyleUriParser Data[]{int, Double},sd,sd,sd)
-    public void RPC_Send(LexView lv, string functionName, DataType[] dataTypes = null, params object[] parameters)
-    {
-        LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.RPC, lv.ViewID, functionName);
 
-        netMessage.EncodeParameters(dataTypes, parameters);
-        lv.gameObject.SendMessage(functionName, parameters);
-        networkConnector.EnqueueAMessage(netMessage);
-    }
 
     public void DestroyPlayerObjects(int actorID)
     {
@@ -189,6 +185,23 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
             NetTime = (double)timeValue / 1000; //long is in mills
         }
         Debug.Log("Modified time : " + NetTime);
+    }
+
+    double lastSentPing = 0;
+    double lastReceivedPing = 0;
+    double pingPeriodInSec = 5;
+    public void SendPing()
+    {
+        lastSentPing = NetTime;
+        LexNetworkMessage netMessage = new LexNetworkMessage();
+        netMessage.Add(LexNetwork.LocalPlayer.actorID);
+        netMessage.Add(MessageInfo.ServerRequest);
+        netMessage.Add(LexRequest.Ping);
+        networkConnector.EnqueueAMessage(netMessage);
+    }
+    public void ReceivePing()
+    {
+        lastReceivedPing = NetTime;
     }
     internal void SetConnected(bool v)
     {

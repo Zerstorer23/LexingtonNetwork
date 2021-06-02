@@ -6,7 +6,7 @@ public class LexNetwork_MessageHandler
     public readonly static string NET_DELIM = "#";
     public readonly static string NET_SIG = "LEX";
     LexNetwork_CallbackHandler callbackHandler = new LexNetwork_CallbackHandler();
-
+  
     public void HandleMessage(string str)
     {
         Debug.Log("Received message " + str);
@@ -106,7 +106,7 @@ public class LexNetwork_MessageHandler
         int numParams = Int32.Parse(netMessage.GetNext());
         if (numParams > 0)
         {
-            var param = ParseParameters(numParams, netMessage);
+            var param = ParseParametersByString(numParams, netMessage);
             lv.SetInstantiateData(param);
         }
         Debug.Log("Instantiate finished " + netMessage.GetReceivedSize());
@@ -126,7 +126,7 @@ public class LexNetwork_MessageHandler
         int targetViewID = Int32.Parse(netMessage.GetNext());
         int numParams = Int32.Parse(netMessage.GetNext());
         Debug.Assert(numParams != 0, "Syncing what?");
-        var param = ParseParameters(numParams, netMessage);
+        var param = ParseParametersByString(numParams, netMessage);
         if (sentActorNumber == LexNetwork.LocalPlayer.actorID) return;
         LexNetwork.instance.SyncVar_Receive(targetViewID, param);
     }
@@ -143,40 +143,73 @@ public class LexNetwork_MessageHandler
         }
         else
         {
-            var param = ParseParameters(numParams, netMessage);
+           // var param = ParseParameters(numParams, netMessage);
+            var param = ParseParametersByString(numParams, netMessage);
             LexNetwork.instance.RPC_Receive(targetViewID, functionName, param);
         }
     }
-
-    object[] ParseParameters(int numParams, LexNetworkMessage netMessage)
+  object[] ParseParametersByString(int numParams, LexNetworkMessage netMessage)
     {
+
         object[] param = new object[numParams];
-        int index = 0;
         for (int i = 0; i < numParams; i++)
         {
-            DataType dType = (DataType)Int32.Parse(netMessage.GetNext());
+            string typeName = netMessage.GetNext();
+            Debug.Log(typeName);
             string dataInfo = netMessage.GetNext();
-            switch (dType)
+            switch (typeName)
             {
-                case DataType.STRING:
-                    param[index] = dataInfo;
+                case nameof(Int32) :
+                    param[i] = int.Parse(dataInfo);
                     break;
-                case DataType.INT:
-                    param[index] = Int32.Parse(dataInfo);
+                case nameof(String):
+                    param[i] = dataInfo;
                     break;
-                case DataType.DOUBLE:
-                    param[index] = Double.Parse(dataInfo);
+                case nameof(Double):
+                    param[i] = double.Parse(dataInfo);
                     break;
-                case DataType.FLOAT:
-                    param[index] = float.Parse(dataInfo);
+                case nameof(Vector3):
+                    param[i] = StringToVector3(dataInfo);
                     break;
-                case DataType.VECTOR3:
-                    param[index] = StringToVector3(dataInfo);
+                case nameof(Quaternion):
+                    param[i] = StringToQuarternion(dataInfo);
+                    break;
+                case nameof(Single):
+                    param[i] = float.Parse(dataInfo);
                     break;
             }
         }
         return param;
     }
+    /*    object[] ParseParameters(int numParams, LexNetworkMessage netMessage)
+        {
+            object[] param = new object[numParams];
+            for (int i = 0; i < numParams; i++)
+            {
+                DataType dType = (DataType)Int32.Parse(netMessage.GetNext());
+                string dataInfo = netMessage.GetNext();
+                switch (dType)
+                {
+                    case DataType.STRING:
+                        param[i] = dataInfo;
+                        break;
+                    case DataType.INT:
+                        param[i] = Int32.Parse(dataInfo);
+                        break;
+                    case DataType.DOUBLE:
+                        param[i] = Double.Parse(dataInfo);
+                        break;
+                    case DataType.FLOAT:
+                        param[i] = float.Parse(dataInfo);
+                        break;
+                    case DataType.VECTOR3:
+                        param[i] = StringToVector3(dataInfo);
+                        break;
+                }
+            }
+            return param;
+        }*/
+
 
 
     private Vector3 StringToVector3(string sVector)

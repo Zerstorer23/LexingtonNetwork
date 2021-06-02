@@ -43,7 +43,7 @@ public class LexNetworkMessage
         //3#hello#2#hello#
     }
 
-    internal void EncodeParameters(DataType[] dataTypes, object[] parameters)
+/*    internal void EncodeParameters(DataType[] dataTypes, object[] parameters)
     {
         if (dataTypes == null)
         {
@@ -60,12 +60,27 @@ public class LexNetworkMessage
             paramQueue.Add((int)dataTypes[i]);
             paramQueue.Add(parameters[i]);
         }
+    }*/
+    internal void EncodeParameters(object[] parameters)
+    {
+        if (parameters == null)
+        {
+            paramQueue.Add("0");
+            return;
+        }
+        else
+        {
+            paramQueue.Add(parameters.Length);
+        }
+
+        foreach(object o in parameters)
+        {
+            Type type = o.GetType();
+            paramQueue.Add(type.Name);
+            paramQueue.Add(o);
+        }
     }
 
-    internal bool Merge(int max_buffer, LexNetworkMessage nextMessage)
-    {
-        throw new NotImplementedException();
-    }
 
     public void Split(string message) {
         receivedQueue = new Queue<string>();
@@ -92,15 +107,15 @@ public enum MessageInfo
 public enum LexCallback
 {
     None, PlayerJoined, PlayerDisconnected, OnLocalPlayerJoined, MasterClientChanged,
-   // BufferedRPCsLoaded,
-    RoomInformationReceived,
-    PushServerTime
-    ,HashChanged,
-    Disconnected
+    HashChanged,
+    Disconnected,
+    PushServerTime,
+    RoomInformationReceived
+        ,Ping_Received
 }
 public enum  LexRequest
 {
-    None, RemoveRPC, ChangeMasterClient, Receive_modifiedTime
+    None, RemoveRPC, ChangeMasterClient, Receive_modifiedTime, Ping
 }
 /*
 
