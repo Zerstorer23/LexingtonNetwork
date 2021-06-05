@@ -63,6 +63,12 @@ public class LexNetworkMessage
     }*/
     internal void EncodeParameters(object[] parameters)
     {
+        Debug.Log("Parameters " + parameters);
+        if (parameters != null) {
+
+            Debug.Log("Parameters size" + parameters.Length);
+            Debug.Log("Parameters 0" + parameters[0]);
+        }
         if (parameters == null)
         {
             paramQueue.Add("0");

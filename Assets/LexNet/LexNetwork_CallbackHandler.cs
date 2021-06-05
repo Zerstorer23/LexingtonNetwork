@@ -118,6 +118,7 @@ public class LexNetwork_CallbackHandler
             Debug.LogWarning("Not supposed to happen");
             return;
         }
+        
         Debug.Log("Received RPCs and finished join");
         Debug.Assert(LexNetwork.IsConnected == false, "Connected but received rpc?");
         LexNetwork.instance.SetConnected(true);
@@ -153,12 +154,16 @@ public class LexNetwork_CallbackHandler
 
         //Load Players
         int numPlayers = Int32.Parse(netMessage.GetNext());
-        Debug.Log("Number of Players: " + numPlayers);
-        LexPlayer localPlayer = new LexPlayer(true, netMessage);
-        LexNetwork.instance.SetLocalPlayer(localPlayer);
-        for (int count = 0; count < numHash; count++)
+        Debug.Log("Number of Players: " + numPlayers);//첫번째는무조건 로컬
+        //LexPlayer localPlayer = new LexPlayer(true, netMessage);
+        
+        for (int count = 0; count < numPlayers; count++)
         {
-            LexPlayer player = new LexPlayer(false, netMessage);
+            bool isLocal = (count == 0);
+            LexPlayer player = new LexPlayer(isLocal, netMessage);
+            if (isLocal) {
+                LexNetwork.instance.SetLocalPlayer(player);
+            } 
             LexNetwork.instance.AddPlayerToDictionary(player);
         }
         //.1 소켓접속, 2. 룸정보 받기 , 3. bufferedrpc 받기, 4. 서버시간 받기,

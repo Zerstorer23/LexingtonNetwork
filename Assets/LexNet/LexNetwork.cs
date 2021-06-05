@@ -203,7 +203,7 @@ public partial class LexNetwork : MonobehaviourLexCallbacks
         LexView lv = go.GetComponent<LexView>();
         lv.SetInstantiateData(parameters);
         lv.SetInformation(LexViewManager.RequestPrivateViewID(), LocalPlayer.actorID, LocalPlayer.actorID, false);
-        instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, null, parameters);
+        instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, parameters);
         return go;
     }
 
@@ -219,7 +219,7 @@ public partial class LexNetwork : MonobehaviourLexCallbacks
         LexView lv = go.GetComponent<LexView>();
         lv.SetInformation(LexViewManager.RequestRoomViewID(), MasterClient.actorID, LocalPlayer.actorID, true);
         Debug.Log("Instnatiate view id " + lv.ViewID);
-        instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, null);
+        instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, parameters);
         return go;
     }
     #endregion

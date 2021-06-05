@@ -36,6 +36,7 @@ public class ObjectPool : MonoBehaviour
         if (objectLibrary == null)
         {
             objectLibrary = new Dictionary<string, Queue<UnityEngine.GameObject>>();
+            //objectLibrary.Clear();
         }
     }
 

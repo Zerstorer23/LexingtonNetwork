@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6131658141853961850}
   - component: {fileID: 6131658141853961847}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: netObj
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -57,6 +57,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8877c68fba97df84f8ce932cdb24f2e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  prViewID: -1
+  prIsSceneView: 0
+  prIsMine: 0
+  pv: {fileID: 0}
   ownerActorNr: 0
   creatorActorNr: 0
   serializedView: {fileID: 0}

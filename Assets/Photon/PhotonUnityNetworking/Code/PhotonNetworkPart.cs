@@ -476,7 +476,7 @@ namespace Photon.Pun
                 if (!methodsOfTypeInCache)
                 {
                     List<MethodInfo> entries = SupportClassPun.GetMethods(type, typePunRPC);
-
+                    
                     monoRPCMethodsCache[type] = entries;
                     cachedRPCMethods = entries;
                 }

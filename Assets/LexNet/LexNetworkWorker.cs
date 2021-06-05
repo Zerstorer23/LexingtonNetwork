@@ -37,12 +37,8 @@ public partial class LexNetwork
     internal void SetLocalPlayer(LexPlayer player)
     {
         LocalPlayer = player;
-        playerDictionary.Add(player.actorID, player);
-        if (player.IsMasterClient)
-        {
-            IsMasterClient = true;
-            MasterClient = player;
-        }
+        Debug.Log("Local player set : " + player.actorID);
+        //    playerDictionary.Add(player.actorID, player);
     }
     internal static LexPlayer GetPlayerByID(int actorID)
     {
@@ -61,7 +57,9 @@ public partial class LexNetwork
         playerDictionary.Add(player.actorID, player);
         if (player.IsMasterClient)
         {
-            MasterClient = player;
+            LexNetwork.instance.SetMasterClient_Receive(player.actorID, player.actorID);
+            
+           // MasterClient = player;
         }
         playerDictionaryMutex.ReleaseMutex();
     }
@@ -100,7 +98,7 @@ public partial class LexNetwork
     {
 
     }
-    public void Instantiate_Send(int viewID, int ownerID, string prefabName, Vector3 position, Quaternion quaternion,params object[] parameters)
+    public void Instantiate_Send(int viewID, int ownerID, string prefabName, Vector3 position, Quaternion quaternion,object[] parameters)
     {
         LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Instantiate, viewID, ownerID, prefabName, position, quaternion);
         netMessage.EncodeParameters( parameters);
@@ -168,6 +166,14 @@ actorNum, SetHash [int]roomOrPlayer [string]Key [object]value
         //view아이디 owner정보 변경
         playerDictionary[sentActorNumber].IsMasterClient = false;
         playerDictionary[nextMaster].IsMasterClient = true;
+        MasterClient = playerDictionary[nextMaster];
+        if (nextMaster == LocalPlayer.actorID)
+        {
+            IsMasterClient = true;
+        }
+        else {
+            IsMasterClient = false;
+        }
         var viewList = LexViewManager.GetViewList();
         foreach (var entry in viewList)
         {

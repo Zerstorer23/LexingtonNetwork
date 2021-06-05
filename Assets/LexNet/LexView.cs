@@ -3,29 +3,38 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
-[ExecuteAlways]
+//[ExecuteAlways]
 public class LexView : MonoBehaviour
 {
-    [SerializeField] private int prViewID = -1;
-    private bool requestSceneviewID = true;
+    private int __prViewID = -1;
+    [SerializeField] private bool prIsSceneView = false;
+    [SerializeField] private bool prIsMine = false;
     public PhotonView pv;
     public int ViewID
     {
-        get { return prViewID; }
-        private set { }
+        get { return __prViewID; }
+        private set {
+            __prViewID = value;
+            Debug.LogWarning("Change " + gameObject.name + " =" + value);
+        }
     }
     public int ownerActorNr;// InstantiateObject, room이면 마스터id
     public int creatorActorNr;
-    public bool IsMine {
-        get;
-        private set;
+    public bool IsMine
+    {
+        get { return prIsMine; }
+        private set { }
     }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
 
 
-
     public bool IsRoomView { get; private set; }// 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
-    public bool IsSceneView { get; private set; } = true; // 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
+    public bool IsSceneView
+    {
+        get { return prIsSceneView; }
+        private set { } 
+    } // 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
     public LexPlayer Owner { get; private set; }
     public MonoBehaviourLex[] RpcMonoBehaviours { get; private set; }
 
@@ -45,7 +54,7 @@ public class LexView : MonoBehaviour
     {
         this.RpcMonoBehaviours = this.GetComponents<MonoBehaviourLex>();
     }
-
+    //c# 전처리
     /*
      씬 :IsMine = true, 
          IsRoomView = false,
@@ -77,19 +86,29 @@ public class LexView : MonoBehaviour
     public LexNetwork_SyncVar serializedView;
     private void Awake()
     {
+        //1. 시점 잡고
+        //2. 에디터에서 바꾸면 이제 프로그램의 권한을 넘어가버림
+        //3. 수정을 아예 안한 오브젝트는 플레이시 유지되지
+        // ->수정을 막는다.
+        // 
         pv = GetComponent<PhotonView>();
         serializedView = GetComponent<LexNetwork_SyncVar>();
         RefreshRpcMonoBehaviourCache();
-        if (!Application.isPlaying && requestSceneviewID) {
-            prViewID = LexViewManager.RequestSceneViewID();
-            IsMine = true;
-            IsSceneView = true;
-            requestSceneviewID = true;
-            //TODO SceneView add to dictionary on start
-            //세거나 저장하거나..
-            //
-            //매번 세서 순서대로 번호를 붙이는게
+        Debug.Log(__prViewID + " = ");
+
+
+    }
+    private void Start()
+    {
+        if (!Application.isPlaying)
+        {//viewid==-1
+       
         }
+    }
+    public void SetAsSceneView(int vid) {
+        ViewID = vid;
+        IsMine = true;
+        IsSceneView = true;
     }
 
     public void ReceiveSerializedVariable(params object[] parameters) {
@@ -104,7 +123,7 @@ public class LexView : MonoBehaviour
         InstantiationData = data;
     }
     public void SetInformation(int viewID, int ownerID, int creatorID, bool roomview) {
-        this.prViewID = viewID;
+        this.ViewID = viewID;
         this.ownerActorNr = ownerID;
         this.creatorActorNr = creatorID;
         this.IsRoomView = roomview;
@@ -127,12 +146,39 @@ public class LexView : MonoBehaviour
             }
         }
         LexViewManager.AddViewtoDictionary(this);
+        Debug.LogWarning("View id set " + ViewID);
     }
     public void UpdateOwnership() {
         if (IsRoomView) {
             IsMine = LexNetwork.IsMasterClient;
             Owner = LexNetwork.MasterClient;
         }
+    }
+    bool initialised = false;
+    private void OnValidate()
+    {
+        Debug.Log(gameObject.name+" OnValidate called ");
+        if (EditorApplication.isPlayingOrWillChangePlaymode || Application.isPlaying) return;
+        if (IsPrefab(gameObject)) return;
+            //if (Application.platform == RuntimePlatform.WindowsEditor) return;
+            if (initialised) return;
+        initialised = true;
+        ViewID =  LexViewManager.RequestSceneViewID();
+        Debug.Log(gameObject.name + " OnValidate passed " + ViewID);
+        IsMine = true;
+        IsSceneView = true;
+        //TODO SceneView add to dictionary on start
+        //세거나 저장하거나..
+        //
+        //매번 세서 순서대로 번호를 붙이는게
+    }
+    public static bool IsPrefab(GameObject go)
+    {
+#if UNITY_2018_3_OR_NEWER
+        return UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(go) != null || EditorUtility.IsPersistent(go);
+#else
+            return EditorUtility.IsPersistent(go);
+#endif
     }
     private bool GetIsMine()
     {

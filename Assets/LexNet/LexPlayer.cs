@@ -10,7 +10,7 @@ public class LexPlayer
     object tagObject;
     public int actorID;
    public Player pPlayer;
-    public new string NickName {
+    public string NickName {
         get { return NickName; }
         set => SetNickName(value);
        }

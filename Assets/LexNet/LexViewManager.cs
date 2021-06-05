@@ -6,7 +6,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
-[ExecuteAlways]
+//[ExecuteAlways]
 public class LexViewManager : MonoBehaviour
 {
     static LexViewManager instance;
@@ -24,7 +24,7 @@ public class LexViewManager : MonoBehaviour
     [SerializeField] int nextRoom = 0;
 
     private static int exceededID = 0;
-    private static int sceneViewNumbers = 0;
+    [SerializeField] static int sceneViewNumbers = 0;
     private void Awake()
     {
         instance = this;
@@ -34,9 +34,12 @@ public class LexViewManager : MonoBehaviour
     {
         if (init) return;
         init = true;
+        sceneViewNumbers = 0;
+
+        LexView[] sceneViews = FindObjectsOfType<LexView>();
         if (Application.isPlaying)
         {
-            sceneViewNumbers = FindObjectsOfType<LexView>().Length;
+            sceneViewNumbers = sceneViews.Length;
             privateViewID_queue = new Queue<int>();
             roomViewID_queue = new Queue<int>();
             for (int i = sceneViewNumbers; i < LexNetwork.MAX_VIEW_IDS; i++)
@@ -45,7 +48,13 @@ public class LexViewManager : MonoBehaviour
                 roomViewID_queue.Enqueue(i);
             }
         }
-     
+/*        else {
+            for (int i = 0; i < sceneViews.Length; i++)
+            {
+                sceneViews[i].SetAsSceneView(i);
+            }
+        }*/
+        Debug.Log("Initialised");
     }
     public static int RequestPrivateViewID()
     {
@@ -117,10 +126,6 @@ public class LexViewManager : MonoBehaviour
         }
         Destroy(lv.gameObject);
     }
-    /*    private void Update()
-        {
-            lvText.text = privateViewID.ToString();
-        }*/
     public static int RequestRoomViewID()
     {
         Init();
@@ -138,9 +143,9 @@ public class LexViewManager : MonoBehaviour
     }
     public static int RequestSceneViewID()
     {
-        Init();
         //MUTEX
         int id = sceneViewNumbers++;
+        Debug.Log("Poll scene id " + id);
         return id;
     }
     public static LexView GetViewByID(int ID)
@@ -163,6 +168,12 @@ public class LexViewManager : MonoBehaviour
     {
         viewMutex.ReleaseMutex();
 
+    }
+
+    private void OnApplicationQuit()
+    {
+        Debug.LogWarning("App quit");
+        sceneViewNumbers = 0;
     }
 
 }

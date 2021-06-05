@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 public partial class LexNetwork
 {
-
+    
     private static Dictionary<int, Dictionary<string,RPC_Info>> lv_rpc = new Dictionary<int, Dictionary<string,RPC_Info>>();
     public void RPC_Send(LexView lv, string functionName, params object[] parameters)
     {
@@ -75,6 +76,7 @@ public partial class LexNetwork
             var functions = type.GetMethods();
             foreach (var function in functions)
             {
+                PhotonView.
                 if (function.GetCustomAttribute(typeof(LexRPC)) == null) continue;
                 RPC_Info rpcInfo = new RPC_Info(mono, function);
                 lv_functions.Add(function.Name, rpcInfo);
