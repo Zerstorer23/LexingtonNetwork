@@ -229,7 +229,7 @@ public class LexNetwork_MessageHandler
         // store as a Vector3
         foreach (string s in sArray)
         {
-            LexNetwork.PrintStringToCode(s);
+          //  LexNetwork.PrintStringToCode(s);
             Debug.Log(s + " => " + float.Parse(s));
         }
         Vector3 result = new Vector3(

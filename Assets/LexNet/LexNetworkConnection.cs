@@ -147,7 +147,7 @@ public class LexNetworkConnection
             }
             string str = Encoding.UTF8.GetString(packet, 0, received);
             Debug.Log("string length " + str.Length);
-            LexNetwork.PrintStringToCode(str);
+           // LexNetwork.PrintStringToCode(str);
             receivedQueue.Enqueue(str);
             Debug.Log(receivedQueue.Count + "/ 수신한 메시지:" + str);
 

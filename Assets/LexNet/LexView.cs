@@ -5,19 +5,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-//[ExecuteAlways]
+
 public class LexView : MonoBehaviour
 {
-    private int __prViewID = -1;
+   [SerializeField] [ReadOnly] private int viewID = -1;
     [SerializeField] private bool prIsSceneView = false;
     [SerializeField] private bool prIsMine = false;
-    public PhotonView pv;
+     public PhotonView pv;
+ 
     public int ViewID
     {
-        get { return __prViewID; }
+        get { return viewID; }
         private set {
-            __prViewID = value;
-            Debug.LogWarning("Change " + gameObject.name + " =" + value);
+            viewID = value;
+//            Debug.LogWarning("Change " + gameObject.name + " =" + value);
         }
     }
     public int ownerActorNr;// InstantiateObject, room이면 마스터id
@@ -94,17 +95,8 @@ public class LexView : MonoBehaviour
         pv = GetComponent<PhotonView>();
         serializedView = GetComponent<LexNetwork_SyncVar>();
         RefreshRpcMonoBehaviourCache();
-        Debug.Log(__prViewID + " = ");
-
-
     }
-    private void Start()
-    {
-        if (!Application.isPlaying)
-        {//viewid==-1
-       
-        }
-    }
+
     public void SetAsSceneView(int vid) {
         ViewID = vid;
         IsMine = true;
@@ -154,8 +146,15 @@ public class LexView : MonoBehaviour
             Owner = LexNetwork.MasterClient;
         }
     }
-    bool initialised = false;
-    private void OnValidate()
+
+#if UNITY_EDITOR
+    public void SetViewID(int newID)
+    {
+        ViewID = newID;
+        EditorUtility.SetDirty(this);
+    }
+#endif
+/*    private void OnValidate()
     {
         Debug.Log(gameObject.name+" OnValidate called ");
         if (EditorApplication.isPlayingOrWillChangePlaymode || Application.isPlaying) return;
@@ -171,15 +170,8 @@ public class LexView : MonoBehaviour
         //세거나 저장하거나..
         //
         //매번 세서 순서대로 번호를 붙이는게
-    }
-    public static bool IsPrefab(GameObject go)
-    {
-#if UNITY_2018_3_OR_NEWER
-        return UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(go) != null || EditorUtility.IsPersistent(go);
-#else
-            return EditorUtility.IsPersistent(go);
-#endif
-    }
+    }*/
+
     private bool GetIsMine()
     {
         if (IsSceneView) return true;

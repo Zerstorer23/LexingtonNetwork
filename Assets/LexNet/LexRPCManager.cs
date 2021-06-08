@@ -76,7 +76,6 @@ public partial class LexNetwork
             var functions = type.GetMethods();
             foreach (var function in functions)
             {
-                PhotonView.
                 if (function.GetCustomAttribute(typeof(LexRPC)) == null) continue;
                 RPC_Info rpcInfo = new RPC_Info(mono, function);
                 lv_functions.Add(function.Name, rpcInfo);

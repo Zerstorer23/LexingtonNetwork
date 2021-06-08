@@ -5,11 +5,13 @@ using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
-//[ExecuteAlways]
 public class LexViewManager : MonoBehaviour
 {
-    static LexViewManager instance;
+   private static LexViewManager prInstance;
     private static Dictionary<int, LexView> viewDictionary = new Dictionary<int, LexView>();
     [SerializeField] Text lvText;/*
     private static int privateViewID = 0;
@@ -22,40 +24,64 @@ public class LexViewManager : MonoBehaviour
 
     [SerializeField] int nextPrivate = 0;
     [SerializeField] int nextRoom = 0;
-
+    [SerializeField] [ReadOnly] int nextPublicViewID = 0;
     private static int exceededID = 0;
-    [SerializeField] static int sceneViewNumbers = 0;
+
+    public static LexViewManager instance
+    {
+        get
+        {
+            if (!prInstance)
+            {
+                prInstance = FindObjectOfType<LexViewManager>();
+                Init();
+            }
+            return prInstance;
+        }
+    }
     private void Awake()
     {
-        instance = this;
         Init();
     }
     private static void Init()
     {
         if (init) return;
         init = true;
-        sceneViewNumbers = 0;
-
-        LexView[] sceneViews = FindObjectsOfType<LexView>();
-        if (Application.isPlaying)
+        privateViewID_queue = new Queue<int>();
+        roomViewID_queue = new Queue<int>();
+        LexView[] sceneViews = Resources.FindObjectsOfTypeAll<LexView>();// FindObjectsOfType<LexView>();
+        instance.nextPublicViewID = 0;
+        for (int i = 0; i < LexNetwork.MAX_VIEW_IDS; i++)
         {
-            sceneViewNumbers = sceneViews.Length;
-            privateViewID_queue = new Queue<int>();
-            roomViewID_queue = new Queue<int>();
-            for (int i = sceneViewNumbers; i < LexNetwork.MAX_VIEW_IDS; i++)
+            privateViewID_queue.Enqueue(i);
+   
+            if (i < sceneViews.Length)
             {
-                privateViewID_queue.Enqueue(i);
+                if (sceneViews[i].ViewID == -1)
+                    continue;
+                AddViewtoDictionary(sceneViews[i]);
+                instance.nextPublicViewID++;
+            }
+            else
+            {
                 roomViewID_queue.Enqueue(i);
             }
         }
-/*        else {
-            for (int i = 0; i < sceneViews.Length; i++)
-            {
-                sceneViews[i].SetAsSceneView(i);
-            }
-        }*/
         Debug.Log("Initialised");
     }
+
+#if UNITY_EDITOR
+    internal void EnumerateSceneViews()
+    {
+        Debug.LogWarning("Called enumeration");
+        nextPublicViewID = 0;
+        LexView[] sceneViews = Resources.FindObjectsOfTypeAll<LexView>();// FindObjectsOfType<LexView>();
+        foreach (var lv in sceneViews) {
+            if (IsPrefab(lv.gameObject)) continue;
+            lv.SetViewID(nextPublicViewID++);
+        }
+    }
+#endif
     public static int RequestPrivateViewID()
     {
         //TODO View iD 빠진거 순서대로 채우기
@@ -66,8 +92,8 @@ public class LexViewManager : MonoBehaviour
             Debug.LogWarning("Max view id exceeded / " + LexNetwork.MAX_VIEW_IDS);
             return userIDoffset + 100000 + (exceededID++);
         }
-        int id = privateViewID_queue.Dequeue();
-        instance.nextPrivate = privateViewID_queue.Peek();
+        int id = userIDoffset + privateViewID_queue.Dequeue();
+        instance.nextPrivate = userIDoffset+ privateViewID_queue.Peek();
 
         //MUTEX
         return id;
@@ -128,7 +154,6 @@ public class LexViewManager : MonoBehaviour
     }
     public static int RequestRoomViewID()
     {
-        Init();
         //MUTEX
         if (roomViewID_queue.Count <= 0)
         {
@@ -141,13 +166,13 @@ public class LexViewManager : MonoBehaviour
         //MUTEX
         return id;
     }
-    public static int RequestSceneViewID()
+/*    public static int RequestSceneViewID()
     {
         //MUTEX
         int id = sceneViewNumbers++;
         Debug.Log("Poll scene id " + id);
         return id;
-    }
+    }*/
     public static LexView GetViewByID(int ID)
     {
         if (CheckKey(ID))
@@ -170,10 +195,14 @@ public class LexViewManager : MonoBehaviour
 
     }
 
-    private void OnApplicationQuit()
+#if UNITY_EDITOR
+    public static bool IsPrefab(GameObject go)
     {
-        Debug.LogWarning("App quit");
-        sceneViewNumbers = 0;
+    #if UNITY_2018_3_OR_NEWER
+            return UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(go) != null || EditorUtility.IsPersistent(go);
+    #else
+                return EditorUtility.IsPersistent(go);
+    #endif
     }
-
+#endif
 }
