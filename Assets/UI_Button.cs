@@ -19,13 +19,20 @@ public class UI_Button : MonoBehaviour
     public void OnClick_MoveRPC() {
         testView.RPC("Move", Photon.Pun.RpcTarget.All, targetPos, "hi");
     }
+    public void OnClick_DestroyMine()
+    {
+        LexView lv = FindObjectOfType<LexView>();
+        LexNetwork.Destroy(lv);
+    }
     public void OnClick_Instantiate()
     {
-        LexNetwork.InstantiateRoomObject("netObj", transform.position, Quaternion.identity);
+        Vector3 pos = new Vector3(Random.Range(0, 10f), Random.Range(0, 10f));
+        LexNetwork.InstantiateRoomObject("netObj", pos, Quaternion.identity);
     }
     public void OnClick_InstantiatePrivate()
     {
-        LexNetwork.Instantiate("netObj", transform.position, Quaternion.identity);
+        Vector3 pos = new Vector3(Random.Range(0, 10f), Random.Range(0, 10f));
+        LexNetwork.Instantiate("netObj", pos, Quaternion.identity);
     }
     public void OnClick_RoomHash()
     {

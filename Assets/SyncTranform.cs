@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SyncTranform : LexNetwork_SyncVar
+public class SyncTranform : MonobehaviourLexSerialised
 {
     Vector3 oldPos = Vector3.zero;
     
@@ -12,7 +12,10 @@ public class SyncTranform : LexNetwork_SyncVar
         transform.position = position;
         Debug.Log(message);
     }
-
+    private void Start()
+    {
+        oldPos = transform.position;
+    }
 
     public override void OnSyncView(params object[] parameters)
     {
