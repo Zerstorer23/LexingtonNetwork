@@ -14,7 +14,8 @@ public class LexNetworkConnection
     string ipAddress = "127.0.0.1";
     int portNumber = 9000;
     static int BUFFER = 32 * 1024;
-    private static Mutex mutex = new Mutex();
+    private static Mutex sendMutex = new Mutex();
+    private static Mutex receiveMutex = new Mutex();
 
     Queue<string> receivedQueue = new Queue<string>();
     Queue<LexNetworkMessage> sendQueue = new Queue<LexNetworkMessage>();
@@ -74,24 +75,24 @@ public class LexNetworkConnection
         while (stayConnected)
         {
             //MUTEX
-            mutex.WaitOne();
+            sendMutex.WaitOne();
             while (sendQueue.Count > 0 && stayConnected)
             {
                 string message = MergeMessages();
                 SendAMessage(message);
                 //무한루프에 주의        
             }
-            mutex.ReleaseMutex();
+            sendMutex.ReleaseMutex();
             //MUTEX
         }
     }
     public void EnqueueAMessage(LexNetworkMessage netMessage)
     {
         //MUTEX
-        mutex.WaitOne();
+        sendMutex.WaitOne();
         Debug.Log("Enqueue " + netMessage.Build());
         sendQueue.Enqueue(netMessage);
-        mutex.ReleaseMutex();
+        sendMutex.ReleaseMutex();
         //MUTEX
     }
     string MergeMessages()
@@ -139,14 +140,18 @@ public class LexNetworkConnection
                 Debug.LogWarning(e.Message);
                 Debug.LogWarning(e.StackTrace);
                 stayConnected = false;
+                receiveMutex.WaitOne();
                 receivedQueue.Enqueue(FlagDisconnected());
+                receiveMutex.ReleaseMutex();
                 return;
             }
             string str = Encoding.UTF8.GetString(packet, 0, received);
-        //    Debug.Log("string length " + str.Length);
-           // LexNetwork.PrintStringToCode(str);
+            Debug.Log("string length " + str.Length);
+            LexNetwork.PrintStringToCode(str);
+            receiveMutex.WaitOne();
             receivedQueue.Enqueue(str);
-           // Debug.Log(receivedQueue.Count + "/ 수신한 메시지:" + str);
+            receiveMutex.ReleaseMutex();
+            // Debug.Log(receivedQueue.Count + "/ 수신한 메시지:" + str);
 
         }
 
@@ -163,11 +168,14 @@ public class LexNetworkConnection
     //그래서queue에 저장후  따로 Update에서 호출하도록함
     public void DequeueReceivedBuffer()
     {
-        while (receivedQueue.Count > 0)
+        //mutex
+        receiveMutex.WaitOne();
+        while (receivedQueue.Count > 0) 
         {
             string message = receivedQueue.Dequeue();
-            messageHandler.HandleMessage(message);
-        }
+            messageHandler.HandleMessage(message);//
+        }//분리하는게 좋을ㄷㅡㅅ
+        receiveMutex.ReleaseMutex();
     }
 
     public void Disconnect()

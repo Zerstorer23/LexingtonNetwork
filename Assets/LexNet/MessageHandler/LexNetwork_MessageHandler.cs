@@ -6,7 +6,7 @@ public class LexNetwork_MessageHandler
     public readonly static string NET_DELIM = "#";
     public readonly static string NET_SIG = "LEX";
     LexNetwork_CallbackHandler callbackHandler = new LexNetwork_CallbackHandler();
-  
+
     public void HandleMessage(string str)
     {
         Debug.Log("Received message " + str);
@@ -14,10 +14,11 @@ public class LexNetwork_MessageHandler
         netMessage.Split(str);
         while (netMessage.HasNext())
         {
-         //   Debug.Log("Received size " + netMessage.GetReceivedSize());
+
             string signature = netMessage.GetNext();
             bool isMyPacket = (signature == NET_SIG);
             if (!isMyPacket) continue;
+            Debug.LogWarning("처리중: " + netMessage.Peek());
             int lengthOfMessages = Int32.Parse(netMessage.GetNext());
             int sentActorNumber = Int32.Parse(netMessage.GetNext());
             MessageInfo messageInfo = (MessageInfo)Int32.Parse(netMessage.GetNext());
@@ -50,7 +51,7 @@ public class LexNetwork_MessageHandler
             }
 
         }
-
+        
 
     }
 
@@ -78,7 +79,7 @@ public class LexNetwork_MessageHandler
         {
             LexNetwork.GetPlayerByID(targetHashID).CustomProperties.UpdateProperties(hash);
         }
-        NetworkEventManager.TriggerEvent(LexCallback.HashChanged, new NetEventObject() { intObj = targetHashID,objData = hash});
+        NetworkEventManager.TriggerEvent(LexCallback.HashChanged, new NetEventObject() { intObj = targetHashID, objData = hash });
     }
 
     private void ParseDestroy(int sentActorNumber, LexNetworkMessage netMessage)
@@ -107,7 +108,7 @@ public class LexNetwork_MessageHandler
          */
         GameObject go = GameObject.Instantiate((GameObject)Resources.Load(prefabName), position, quaternion);
         LexView lv = go.GetComponent<LexView>();
-        lv.SetInformation(targetViewID,prefabName, ownerID, sentActorNumber, false);
+        lv.SetInformation(targetViewID, prefabName, ownerID, sentActorNumber, false);
         //Params
         int numParams = Int32.Parse(netMessage.GetNext());
         if (numParams > 0)
@@ -149,12 +150,12 @@ public class LexNetwork_MessageHandler
         }
         else
         {
-           // var param = ParseParameters(numParams, netMessage);
+            // var param = ParseParameters(numParams, netMessage);
             var param = ParseParametersByString(numParams, netMessage);
             LexNetwork.instance.RPC_Receive(targetViewID, functionName, param);
         }
     }
-  object[] ParseParametersByString(int numParams, LexNetworkMessage netMessage)
+    object[] ParseParametersByString(int numParams, LexNetworkMessage netMessage)
     {
 
         object[] param = new object[numParams];
@@ -165,7 +166,7 @@ public class LexNetwork_MessageHandler
             string dataInfo = netMessage.GetNext();
             switch (typeName)
             {
-                case nameof(Int32) :
+                case nameof(Int32):
                     param[i] = int.Parse(dataInfo);
                     break;
                 case nameof(String):
@@ -220,24 +221,13 @@ public class LexNetwork_MessageHandler
 
     private Vector3 StringToVector3(string sVector)
     {
-        // Remove the parentheses
-        //  if (sVector.StartsWith("(") && sVector.EndsWith(")"))
-        {
-            int start = sVector.IndexOf('(') + 1;
-            int end = sVector.IndexOf(')');
-            sVector = sVector.Substring(start, end - start);
-            Debug.Log("Parenthe removes " + sVector);
-        }
+
+        int start = sVector.IndexOf('(') + 1;
+        int end = sVector.IndexOf(')');
+        sVector = sVector.Substring(start, end - start);
 
         // split the items
         string[] sArray = sVector.Split(',');
-
-        // store as a Vector3
-        foreach (string s in sArray)
-        {
-          //  LexNetwork.PrintStringToCode(s);
-            Debug.Log(s + " => " + float.Parse(s));
-        }
         Vector3 result = new Vector3(
             float.Parse(sArray[0]),
             float.Parse(sArray[1]),

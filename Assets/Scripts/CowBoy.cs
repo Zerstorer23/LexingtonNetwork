@@ -10,7 +10,6 @@ public class CowBoy : MonobehaviourLexSerialised
 {
     public float moveSpeed = 5f;
     public SpriteRenderer sprite;
-    public LexView lv;
     public  Animator animator;
 
     public bool canMove = true;
@@ -27,8 +26,6 @@ public class CowBoy : MonobehaviourLexSerialised
     void Start()
     {//TODO 원래 AWAKE였음
         Debug.Log("Cowboy awake");
-        lv = lexView;
-        Debug.Log(lexView.IsMine);
         if (lexView.IsMine)
         {
             var CM = GameObject.Find("CMvcam").GetComponent<CinemachineVirtualCamera>();
@@ -53,11 +50,12 @@ public class CowBoy : MonobehaviourLexSerialised
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (lexView.IsMine && AllowInputs) {
             CheckInputs();
         }
+        WriteSync();
     }
 
     private void CheckInputs()
@@ -91,7 +89,7 @@ public class CowBoy : MonobehaviourLexSerialised
         transform.position += movement * moveSpeed * Time.deltaTime;
         if (Input.GetKeyDown(KeyCode.D))
         {
-            lv.RPC("FlipSprite", RpcTarget.AllBuffered, false);
+            lexView.RPC("FlipSprite", RpcTarget.AllBuffered, false);
             animator.SetBool("IsMove", true);
         }
         else if (Input.GetKeyUp(KeyCode.D))
@@ -101,7 +99,7 @@ public class CowBoy : MonobehaviourLexSerialised
 
         if (Input.GetKeyDown(KeyCode.A))
         {
-            lv.RPC("FlipSprite", RpcTarget.AllBuffered, true);
+            lexView.RPC("FlipSprite", RpcTarget.AllBuffered, true);
             animator.SetBool("IsMove", true);
         }
         if (Input.GetKeyUp(KeyCode.A))
@@ -159,12 +157,12 @@ public class CowBoy : MonobehaviourLexSerialised
     Vector3 oldPos;
     public override void OnSyncView(params object[] parameters)
     {
-        Debug.Log("On sync view " + isWriting);
         if (isWriting)
         {
             if (transform.position == oldPos) return;
-            oldPos = transform.position;
+            Debug.Log("Sync send " + oldPos);
             PushSync(transform.position);
+            oldPos = transform.position;
         }
         else
         {

@@ -67,7 +67,7 @@ public class GameManager : MonobehaviourLexCallbacks
     }
     private void Update()
     {
-        pingText.text = "PING: " + LexNetwork.GetPing();
+       // pingText.text = "PING: " + LexNetwork.GetPing();
 
         if (Input.GetKeyDown(KeyCode.Escape)) {
             ToggleLeaveScreen();

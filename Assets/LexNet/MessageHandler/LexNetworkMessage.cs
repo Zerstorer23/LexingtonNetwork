@@ -8,7 +8,7 @@ using static LexNetwork_MessageHandler;
 public class LexNetworkMessage 
 {
     List<object> paramQueue;
-    Queue<string> receivedQueue;
+    Queue<string> receivedQueue = new Queue<string>();
     public LexNetworkMessage() {
         paramQueue = new List<object>();
     }
@@ -75,7 +75,7 @@ public class LexNetworkMessage
     }*/
     internal void EncodeParameters(object[] parameters)
     {
-        Debug.Log("Parameters " + parameters);
+       // Debug.Log("Parameters " + parameters);
         if ( parameters!=null && parameters.Length>0) {
             Debug.Log("Parameters size" + parameters.Length);
             Debug.Log("Parameters 0" + parameters[0]);
@@ -97,10 +97,10 @@ public class LexNetworkMessage
 
 
     public void Split(string message) {
-        receivedQueue = new Queue<string>();
+        receivedQueue.Clear();
         string[] tokens = message.Split('#');
         foreach (string s in tokens) {
-         //   Debug.Log(receivedQueue.Count+" : "+ s);
+            Debug.Log(receivedQueue.Count+" : "+ s);
             receivedQueue.Enqueue(s);
         }
     }
@@ -112,6 +112,15 @@ public class LexNetworkMessage
     }
     public bool HasNext() {
         return receivedQueue.Count > 0;
+    }
+    public string Peek()
+    {
+        if (receivedQueue.Count == 0) return "0";
+        string msg = "";
+        foreach (var s in receivedQueue) {
+            msg += " " + s;
+        }
+        return receivedQueue.Count +" / "+ msg;
     }
 }
 public enum MessageInfo
