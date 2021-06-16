@@ -18,37 +18,46 @@ public class LexNetwork_MessageHandler
             string signature = netMessage.GetNext();
             bool isMyPacket = (signature == NET_SIG);
             if (!isMyPacket) continue;
-            Debug.LogWarning("처리중: " + netMessage.Peek());
-            int lengthOfMessages = Int32.Parse(netMessage.GetNext());
-            int sentActorNumber = Int32.Parse(netMessage.GetNext());
-            MessageInfo messageInfo = (MessageInfo)Int32.Parse(netMessage.GetNext());
-            Debug.Log(sentActorNumber + " message " + messageInfo);
-            switch (messageInfo)
+            try
             {
-                case MessageInfo.RPC:
-                    ParseRPC(sentActorNumber, netMessage);
-                    break;
-                case MessageInfo.SyncVar:
-                    ParseSyncVar(sentActorNumber, netMessage);
-                    break;
-                case MessageInfo.Chat:
-                    ParseChat(sentActorNumber, netMessage);
-                    break;
-                case MessageInfo.Instantiate:
-                    ParseInstantiate(sentActorNumber, netMessage);
-                    break;
-                case MessageInfo.Destroy:
-                    ParseDestroy(sentActorNumber, netMessage);
-                    break;
-                case MessageInfo.SetHash:
-                    ParseSetHash(sentActorNumber, netMessage);
-                    break;
-                case MessageInfo.ServerRequest:
-                    break;
-                case MessageInfo.ServerCallbacks:
-                    callbackHandler.ParseCallback(sentActorNumber, netMessage);
-                    break;
+                Debug.LogWarning("처리중: " + netMessage.Peek());
+                int lengthOfMessages = Int32.Parse(netMessage.GetNext());
+                int sentActorNumber = Int32.Parse(netMessage.GetNext());
+                MessageInfo messageInfo = (MessageInfo)Int32.Parse(netMessage.GetNext());
+                Debug.Log(sentActorNumber + " message " + messageInfo);
+                switch (messageInfo)
+                {
+                    case MessageInfo.RPC:
+                        ParseRPC(sentActorNumber, netMessage);
+                        break;
+                    case MessageInfo.SyncVar:
+                        ParseSyncVar(sentActorNumber, netMessage);
+                        break;
+                    case MessageInfo.Chat:
+                        ParseChat(sentActorNumber, netMessage);
+                        break;
+                    case MessageInfo.Instantiate:
+                        ParseInstantiate(sentActorNumber, netMessage);
+                        break;
+                    case MessageInfo.Destroy:
+                        ParseDestroy(sentActorNumber, netMessage);
+                        break;
+                    case MessageInfo.SetHash:
+                        ParseSetHash(sentActorNumber, netMessage);
+                        break;
+                    case MessageInfo.ServerRequest:
+                        break;
+                    case MessageInfo.ServerCallbacks:
+                        callbackHandler.ParseCallback(sentActorNumber, netMessage);
+                        break;
+                }
             }
+            catch (Exception e) {
+                Debug.LogWarning("Handle message fatal error");
+                Debug.LogWarning(e.Message);
+                Debug.LogWarning(e.StackTrace);
+            }
+          
 
         }
         

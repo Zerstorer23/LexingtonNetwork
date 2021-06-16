@@ -390,8 +390,8 @@ using Photon.Realtime;
 
     private void Awake()
     {
-        dict.Add("Hi", "A");
-        Debug.Log(dict["Hi"]);
+      //  dict.Add("Hi", "A");
+       // Debug.Log(dict["Hi"]);
     }
     private void Update()
         {

@@ -12,7 +12,7 @@ public class Bullet : MonoBehaviourLex
     IEnumerator destroyBullet()
     {
         yield return new WaitForSeconds(destroyTime);
-        Destroy();
+        LexNetwork.Destroy(lexView);
     }
     private void OnEnable()
     {
@@ -42,10 +42,10 @@ public class Bullet : MonoBehaviourLex
             if (target.tag == "Player") {
                 target.RPC("HealthUpdate", RpcTarget.AllBuffered, damage);
                 target.GetComponent<HurtEffect>().GotHit();
-            
+
             }
-            this.GetComponent<LexView>().RPC("Destroy", RpcTarget.AllBuffered);
-        
+            LexNetwork.Destroy(lexView);
+
         }
 
     }
@@ -56,9 +56,4 @@ public class Bullet : MonoBehaviourLex
         goLeft = true;
     }
 
-
-    private void Destroy()
-    {
-        LexNetwork.Destroy(lexView);
-    }
 }

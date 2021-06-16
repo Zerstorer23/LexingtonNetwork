@@ -77,8 +77,8 @@ public class LexNetworkMessage
     {
        // Debug.Log("Parameters " + parameters);
         if ( parameters!=null && parameters.Length>0) {
-            Debug.Log("Parameters size" + parameters.Length);
-            Debug.Log("Parameters 0" + parameters[0]);
+          //  Debug.Log("Parameters size" + parameters.Length);
+           // Debug.Log("Parameters 0" + parameters[0]);
             paramQueue.Add(parameters.Length);
         }
         else 
@@ -98,9 +98,10 @@ public class LexNetworkMessage
 
     public void Split(string message) {
         receivedQueue.Clear();
+        message.Trim();
         string[] tokens = message.Split('#');
         foreach (string s in tokens) {
-            Debug.Log(receivedQueue.Count+" : "+ s);
+           // Debug.Log(receivedQueue.Count+" : "+ s);
             receivedQueue.Enqueue(s);
         }
     }
