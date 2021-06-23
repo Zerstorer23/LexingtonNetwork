@@ -89,7 +89,6 @@
 #endif
         public static int RequestPrivateViewID()
         {
-            //TODO View iD 빠진거 순서대로 채우기
             //MUTEX
             int userIDoffset = LexNetwork.LocalPlayer.actorID * 10000;
             if (privateViewID_queue.Count <= 0)

@@ -1,5 +1,7 @@
 ﻿
-//#undef USE_LEX
+#undef USE_LEX
+
+
 namespace Lex
 {
     using System.Collections;
@@ -32,7 +34,6 @@ namespace Lex
         [SerializeField] [ReadOnly] bool amMaster;
         [SerializeField] [ReadOnly] int myActorID;
 
-       
         public static LexHashTable CustomProperties { get; private set; } = new LexHashTable();
 
         public static LexNetwork instance
@@ -112,7 +113,7 @@ namespace Lex
             foreach (Player p in players)
             {
                 LexPlayer uPlayer = new LexPlayer(p);
-                playerDictionary.Add(p.UserId, uPlayer);
+                AddPlayerToDictionary(uPlayer);
             }
             Debug.Log("<color=#00ff00>Conn man : current size</color> " + playerDictionary.Count);
         }
@@ -122,6 +123,7 @@ namespace Lex
         {
             if (!useLexNet)
             {
+                Debug.Log("Connect photon");
                 return PhotonNetwork.ConnectUsingSettings();
             }
 
@@ -167,7 +169,7 @@ namespace Lex
         {
             if (!useLexNet)
             {
-                return PhotonNetwork.AllocateViewID(lv.pv);
+                return PhotonNetwork.AllocateViewID(lv.Pv);
             }
             return false;
 
@@ -176,7 +178,7 @@ namespace Lex
         {
             if (!useLexNet)
             {
-                return PhotonNetwork.AllocateRoomViewID(lv.pv);
+                return PhotonNetwork.AllocateRoomViewID(lv.Pv);
             }
             return false;
         }
@@ -262,7 +264,7 @@ namespace Lex
         {
             if (!useLexNet)
             {   //NOTE object not need parse
-                PhotonNetwork.Destroy(lv.pv);
+                PhotonNetwork.Destroy(lv.Pv);
                 return;
             }
             if (lv != null)
@@ -329,7 +331,7 @@ namespace Lex
         {
             if (!useLexNet)
             {   //NOTE object not need parse
-                PhotonNetwork.RemoveBufferedRPCs(lv.pv.ViewID);
+                PhotonNetwork.RemoveBufferedRPCs(lv.Pv.ViewID);
                 return;
             }
             LexNetworkMessage networkMessage = new LexNetworkMessage();
@@ -388,6 +390,7 @@ namespace Lex
                 player.ReceiveBotProperty(key, value);
             }
         }
+//TODO Wrap Photon Player on joins
 
         private void Awake()
         {
@@ -402,7 +405,7 @@ namespace Lex
         private void FixedUpdate()
         {
             amMaster = IsMasterClient;
-            if (IsConnected)
+            if (IsConnected && LocalPlayer != null)
             {
 
                 myActorID = LocalPlayer.actorID;
@@ -410,6 +413,7 @@ namespace Lex
             }
         }
         public LexPlayer[] players;
+        LexRPC
         private void OnApplicationQuit()
         {
             LexNetwork.Disconnect();

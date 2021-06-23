@@ -40,9 +40,38 @@ public class GameManager : MonobehaviourLexCallbacks
         instance = this;
         LexNetwork.ConnectUsingSettings();
     }
-    public override void OnJoinedRoom()
+
+#if !USE_LEX
+    public static ExitGames.Client.Photon.Hashtable GetInitOptions()
     {
-        base.OnJoinedRoom();
+        var hash = new ExitGames.Client.Photon.Hashtable();
+        hash.Add(RoomProperty.GameMode, "dd");
+        hash.Add(RoomProperty.Seed, Random.Range(0, 133));
+        return hash;
+    }
+    public static void JoinRoom()
+    {
+
+        var hash = GetInitOptions();
+        RoomOptions roomOpts = new RoomOptions()
+        {
+            IsVisible = true,
+            IsOpen = true,
+            MaxPlayers = (byte)10,
+            PublishUserId = true,
+            CustomRoomProperties = hash
+        };
+        PhotonNetwork.JoinOrCreateRoom("Primary", roomOpts, TypedLobby.Default);
+
+    }
+    public override void OnConnectedToMaster()
+    {
+        Debug.Log("Connected to master");
+        JoinRoom();
+    }
+#endif
+    public override void OnLocalPlayerJoined()
+    {
         AssignTeam();
         respawnButton.gameObject.SetActive(true);
         Debug.Log("Joined room!");

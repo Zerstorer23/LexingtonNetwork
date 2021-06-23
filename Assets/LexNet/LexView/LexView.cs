@@ -1,5 +1,4 @@
-﻿//TODO NAMESPACE, INTERNAL , LEXVIEW에 체크가 안뜨는데/?
-namespace Lex
+﻿namespace Lex
 {
     using Photon.Pun;
     using System;
@@ -14,64 +13,12 @@ namespace Lex
     {
         public ControllerType controllerType = ControllerType.Human;
         public string uid;
-        LexPlayer uPlayer;
         public LexPlayer Owner
         {
             get { return prOwner; }
             private set { prOwner = value; }
         }
-        public LexPlayer Controller
-        {
-            get => GetController();
-            private set => uPlayer = value;
-        }
-        public void SetControllerInfo(bool isBot, string uid)
-        {
-            controllerType = (isBot) ? ControllerType.Bot : ControllerType.Human;
-            this.uid = uid;
-            if (isBot)
-            {
-                Owner = LexNetwork.GetPlayerByID(uid);
-            }
-        }
-
-        public void SetControllerInfo(string uid)
-        {
-            controllerType = ControllerType.Bot;
-            this.uid = uid;
-            Owner = LexNetwork.GetPlayerByID(uid);
-        }
-        public void SetControllerInfo(LexPlayer player)
-        {
-            controllerType = ControllerType.Human;
-            this.uid = player.uid;
-        }
-
-        private LexPlayer GetController()
-        {
-            if (IsBot)
-            {
-                return uPlayer;
-            }
-            else
-            {
-                return LexNetwork.GetPlayerByID(Owner.uid);
-            }
-        }
-
-        public bool IsLocal
-        {
-            get { return (IsMine && controllerType == ControllerType.Human); }
-        }
-        public bool IsBot
-        {
-            get { return controllerType == ControllerType.Bot; }
-        }
-        public bool Equals(string compareID) => this.uid == compareID;
-        public bool Equals(LexPlayer user) => this.uid == user.uid;
-
-
-
+        
 
         internal Dictionary<string, RPC_Info> cachedRPCs = new Dictionary<string, RPC_Info>();
 
@@ -79,7 +26,20 @@ namespace Lex
         [SerializeField] [ReadOnly] private ViewType prViewType = ViewType.SceneView;
         [SerializeField] [ReadOnly] private bool __IsMine = true;
         [SerializeField] [ReadOnly] private LexPlayer prOwner = null;
-        public PhotonView pv;
+        
+        private PhotonView prpv;
+        public PhotonView Pv
+        {
+            get {
+                if (prpv == null) {
+                    prpv = GetComponent<PhotonView>();
+                }
+                return prpv;
+            }
+            set {
+                prpv = value;
+            }
+        }
         public string objTag { get; private set; }
 
         public int ViewID
@@ -95,22 +55,26 @@ namespace Lex
         public int creatorActorNr;
         public bool IsMine
         {
-            get { return (LexNetwork.useLexNet)? __IsMine : pv.IsMine; }
+            get { return (LexNetwork.useLexNet)? __IsMine : Pv.IsMine; }
             private set { __IsMine = value; }
         }//씬오브젝트, 개인 오브젝트, 마스터일경우 RoomObject도
-        //TODO LexView 동기화
+
         public ViewType viewType
         {
             get { return prViewType; }
             private set { prViewType = value; }
         }
-        public bool IsRoomView { get { return (LexNetwork.useLexNet) ? prViewType == ViewType.RoomView : pv.IsRoomView; } }// 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
+        public bool IsRoomView { get { return (LexNetwork.useLexNet) ? prViewType == ViewType.RoomView : Pv.IsRoomView; } }// 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
         public bool IsSceneView { get { return prViewType == ViewType.SceneView ; } } // 룸오브젝트, 씬오브젝트/ 마스터만 컨트롤
 
         public MonoBehaviourLex[] RpcMonoBehaviours { get; private set; }
 
-
-        public object[] InstantiationData;
+        private object[] prInstantiationData;
+        public object[] InstantiationData
+        {
+            get { return (LexNetwork.useLexNet) ? prInstantiationData : Pv.InstantiationData; }
+            private set { prInstantiationData = value; }
+        }
 
 
         public static LexView Get(Component component)
@@ -130,7 +94,6 @@ namespace Lex
                 Type type = mono.GetType();
                 //a     Debug.Log("Searching " + type.Name);
                 var functions = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                //TODO 그냥 public으로 제한?
                 foreach (var function in functions)
                 {
                     if (function.GetCustomAttribute(typeof(LexRPC)) == null) continue;
@@ -177,7 +140,7 @@ namespace Lex
             //3. 수정을 아예 안한 오브젝트는 플레이시 유지되지
             // ->수정을 막는다.
             // 
-            pv = GetComponent<PhotonView>();
+            Pv = GetComponent<PhotonView>();
             serializedView = GetComponent<MonobehaviourLexSerialised>();//TODO 여러개일수 있음
             RefreshRpcMonoBehaviourCache();
             if (serializedView) serializedView.UpdateOwnership(); //SceneView case
@@ -276,7 +239,7 @@ namespace Lex
         {
             if (!LexNetwork.useLexNet)
             {
-                pv.RPC(methodName, target, parameters);
+                Pv.RPC(methodName, target, parameters);
             }
             else
             {

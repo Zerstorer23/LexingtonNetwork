@@ -67,10 +67,7 @@
         {
             OnJoinedRoom();
         }
-           public virtual void OnJoinedRoom()
-        {
 
-        }
 #else
         public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
         {
@@ -82,23 +79,29 @@
         }
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
         {
-            LexPlayer player = PlayerManager.GetPlayerByID(targetPlayer.UserId);
+            LexPlayer player = LexNetwork.GetPlayerByID(targetPlayer.UserId);
             OnPlayerSettingsChanged(player, new LexHashTable(changedProps));
         }
         public override void OnMasterClientSwitched(Player newMasterClient)
         {
-            LexPlayer player = PlayerManager.GetPlayerByID(newMasterClient.UserId);
+            LexPlayer player = LexNetwork.GetPlayerByID(newMasterClient.UserId);
             OnMasterChanged(player.actorID);
         }
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
-            LexPlayer player = PlayerManager.GetPlayerByID(newPlayer.UserId);
+            LexPlayer player = new LexPlayer(newPlayer);// LexNetwork.GetPlayerByID(newPlayer.UserId);
+            LexNetwork.instance.AddPlayerToDictionary(player);
             OnPlayerEnteredRoom(player);
         }
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
-            LexPlayer player = PlayerManager.GetPlayerByID(otherPlayer.UserId);
+            LexPlayer player = LexNetwork.GetPlayerByID(otherPlayer.UserId);
+            LexNetwork.instance.RemovePlayerFromDictionary(player.uid);
             OnPlayerLeftRoom(player);
+        }
+        public override void OnJoinedRoom()
+        {
+            OnLocalPlayerJoined();
         }
 #endif
 
@@ -129,9 +132,12 @@
         {
 
         }
-  
+        public virtual void OnLocalPlayerJoined()
+        {
 
-     
+        }
+
+
     }
 
 }

@@ -52,11 +52,15 @@ namespace Lex
         {
             playerDictionaryMutex.WaitOne();
             playerDictionary.Add(player.uid, player);
+            Debug.LogWarning("Add player " + player.uid);
             if (player.IsMasterClient)
             {
                 LexNetwork.instance.SetMasterClient_Receive(player.uid, player.uid);
 
                 // MasterClient = player;
+            }
+            if (player.IsLocal) {
+                LexNetwork.LocalPlayer = player;
             }
             playerDictionaryMutex.ReleaseMutex();
         }

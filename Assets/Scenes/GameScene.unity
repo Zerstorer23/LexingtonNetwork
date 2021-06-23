@@ -1091,6 +1091,7 @@ GameObject:
   - component: {fileID: 453084296}
   - component: {fileID: 453084294}
   - component: {fileID: 453084295}
+  - component: {fileID: 453084297}
   m_Layer: 0
   m_Name: ConnectedPlayers
   m_TagString: Untagged
@@ -1126,14 +1127,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8877c68fba97df84f8ce932cdb24f2e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  viewID: 0
+  controllerType: 0
+  uid: 
+  viewID: 1
   prViewType: 0
   __IsMine: 1
   prOwner:
     myNickName: 
     actorID: 0
-    IsMasterClient: 0
-  pv: {fileID: 0}
   ownerActorNr: 0
   creatorActorNr: 0
   serializedView: {fileID: 0}
@@ -1151,6 +1152,28 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &453084297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 453084293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 2
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &460464514
 GameObject:
   m_ObjectHideFlags: 0
@@ -3142,6 +3165,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1162872548, guid: c41f6fe35e198224481dcd67dba2f4de, type: 3}
+      propertyPath: viewID
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8116256741856058406, guid: c41f6fe35e198224481dcd67dba2f4de,
         type: 3}
       propertyPath: m_Name

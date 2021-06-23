@@ -12,17 +12,25 @@ namespace Lex
 
     public partial class LexNetwork : MonobehaviourLexCallbacks
     {
-        public static double NetTime { get; private set; }
-        public static string NickName { get; private set; }
-        public static int countOfPlayersInRoom;
-        public static bool IsConnected { get; private set; }
-        public static bool IsMasterClient { get; private set; }//TODO divide into photon
+       static double prNetTime;
+       static string prNickName;
+       static bool prIsConnected;
+       static bool prIsMasterClient;
+       static LexPlayer prMaster;
+       static LexPlayer prLocal;
+        public static double NetTime { get { return useLexNet ? prNetTime : PhotonNetwork.Time;  } private set { prNetTime = value; } }
+
+
+        public static string NickName { get { return useLexNet ? prNickName : PhotonNetwork.NickName; } private set { prNickName = value; } }
+
+        public static bool IsConnected { get { return useLexNet ? prIsConnected : PhotonNetwork.IsConnectedAndReady; } private set { prIsConnected = value; } }
+        public static bool IsMasterClient { get { return useLexNet ? prIsMasterClient : PhotonNetwork.IsMasterClient; } private set { prIsMasterClient = value; } }
         public static LexPlayer[] PlayerList { get { return GetPlayerList(); } }
         public static LexPlayer[] PlayerListOthers { get { return GetPlayerListOthers(); } }
         public static int PlayerCount { get { return GetPlayerCount(); } }
 
-        public static LexPlayer MasterClient { get; private set; }
-        public static LexPlayer LocalPlayer{get; private set; }
+        public static LexPlayer MasterClient { get { return useLexNet ? prMaster : new LexPlayer(PhotonNetwork.MasterClient); } private set { prMaster = value; } }
+        public static LexPlayer LocalPlayer { get { return useLexNet ? prLocal : new LexPlayer(PhotonNetwork.LocalPlayer); } private set { prLocal = value; } }
 
         internal static void AddBotPlayer(LexPlayer botPlayer)
         {
@@ -145,10 +153,10 @@ namespace Lex
             }
             // EventManager.TriggerEvent(MyEvents.EVENT_PLAYER_LEFT, new EventObject(newPlayer.UserId));
         }
+
         public override void OnJoinedRoom()
         {
             if (!useLexNet) {
-
                 var playerList = PhotonNetwork.PlayerList;
                 foreach (var p in playerList) {
                     LexPlayer lp = new LexPlayer(p);

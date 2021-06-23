@@ -1,4 +1,6 @@
 ﻿using Lex;
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,15 +20,17 @@ public class LobbyManager : MonobehaviourLexCallbacks
         Debug.Log(converter);
         //
     }
+
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
-      /*  LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
-        LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");*/
+
+        /*  LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
+          LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
+          LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
+          LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
+          LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");
+          LexNetwork.SetRoomCustomProperties(RoomProperty.GameMode, Random.Range(0, 100) + "");*/
 
         Debug.Log("Join successful");
 

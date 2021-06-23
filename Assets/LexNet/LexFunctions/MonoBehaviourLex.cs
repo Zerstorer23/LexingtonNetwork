@@ -7,7 +7,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-    public class LexRPC : Attribute
+    public class LexRPC
+#if USE_LEX
+        : Attribute
+#else
+        :PunRPC
+#endif
     {
     }
 

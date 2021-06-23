@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using System;
 using Lex;
 
-public class MenuManager : MonoBehaviourPunCallbacks
+public class MenuManager : MonobehaviourLexCallbacks
 {
     [SerializeField] InputField userNameInput;
 

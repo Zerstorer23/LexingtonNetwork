@@ -35,7 +35,7 @@ public class CowBoy : MonobehaviourLexSerialised
 
             playerNameText.text = LexNetwork.NickName;
             playerNameText.text+= LexNetwork.LocalPlayer.CustomProperties[PlayerProperty.Team];
-            ;
+            
             playerNameText.color = Color.green;
             GameManager.instance.LocalPlayer = this.gameObject;
         }

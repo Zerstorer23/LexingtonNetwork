@@ -113,12 +113,7 @@
             string prefabName = netMessage.GetNext();
             Vector3 position = StringToVector3(netMessage.GetNext());
             Quaternion quaternion = StringToQuarternion(netMessage.GetNext());
-            //TODO
-            /*
-             INSTANTIATE =COWBOY AWAKE CALL
-             SET INFO -> LEXVIEW AWAKE CALL
 
-             */
             GameObject go = GameObject.Instantiate((GameObject)Resources.Load(prefabName), position, quaternion);
             LexView lv = go.GetComponent<LexView>();
             lv.SetInformation(targetViewID, prefabName, ownerID, sentActorNumber, false);

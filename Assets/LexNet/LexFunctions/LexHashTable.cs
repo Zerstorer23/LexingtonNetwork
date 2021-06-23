@@ -13,11 +13,11 @@
         public Dictionary<int, object> lexHash = new Dictionary<int, object>();
         public object this[int i]
         {
-            get { return lexHash[i]; }
+            get { return (LexNetwork.useLexNet)?lexHash[i] : owner.pPlayer.CustomProperties[i]; }
         }
         public object this[object i]
         {
-            get { return lexHash[(int)i]; }
+            get { return (LexNetwork.useLexNet) ? lexHash[(int)i] : owner.pPlayer.CustomProperties[(int)i]; }
         }
         LexPlayer owner = null;
         public LexHashTable()

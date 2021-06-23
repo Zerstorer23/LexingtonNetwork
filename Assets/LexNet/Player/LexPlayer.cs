@@ -24,7 +24,9 @@
         public Player pPlayer;
 
 
-        public bool IsMasterClient;
+        public bool IsMasterClient { get; internal set; }
+
+        LexHashTable prHash;
         public LexHashTable CustomProperties { get; private set; }
         //  public SerializeDictionary<string,string> dict = new SerializeDictionary<string, string>();
 
@@ -141,12 +143,16 @@
         {
             controllerType = ControllerType.Human;
             this.pPlayer = player;
+            this.IsMasterClient = player.IsMasterClient;
+            this.IsLocal = player.IsLocal;
+            CustomProperties = new LexHashTable(this);
         }
         public LexPlayer(string uid)
         {
             controllerType = ControllerType.Bot;
             this.botID = uid;
             NickName = botNames[UnityEngine.Random.Range(0, botNames.Length)];
+            CustomProperties = new LexHashTable(this);
         }
 
         public T GetProperty<T>(object key) => GetProperty<T>((int)key);
@@ -189,7 +195,12 @@
                 {
                     foreach (var entry in lexHash.lexHash)
                     {
+#if USE_LEX
                         LexNetwork.instance.lexView.RPC("SetBotProperty",RpcTarget.AllBuffered,uid,entry.Key,entry.GetType().Name,entry.Value);
+#else
+
+                        LexNetwork.instance.photonView.RPC("SetBotProperty", RpcTarget.AllBuffered, uid, entry.Key, entry.GetType().Name, entry.Value);
+#endif
                     }
                 }
             }
@@ -242,7 +253,4 @@
         GameMode,Seed
     }
 
-    public enum ControllerType { 
-        Human,Bot
-    }
 }
