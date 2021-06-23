@@ -5,6 +5,7 @@ using Photon.Pun;
 using System;
 using Cinemachine;
 using UnityEngine.UI;
+using Lex;
 
 public class CowBoy : MonobehaviourLexSerialised
 {
@@ -160,7 +161,6 @@ public class CowBoy : MonobehaviourLexSerialised
         if (isWriting)
         {
             if (transform.position == oldPos) return;
-            Debug.Log("Sync send " + oldPos);
             PushSync(transform.position);
             oldPos = transform.position;
         }

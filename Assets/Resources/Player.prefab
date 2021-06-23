@@ -268,7 +268,7 @@ Rigidbody2D:
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &8640627937583801482
 MonoBehaviour:
@@ -284,7 +284,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 5
   sprite: {fileID: 1224650231564288979}
-  lv: {fileID: 0}
   animator: {fileID: 1224650231564288978}
   canMove: 1
   BulletPrefab: {fileID: 3030740185909524736, guid: 0880f4feb1a4c2741b34b646214d6d4e,
@@ -339,6 +338,10 @@ MonoBehaviour:
   viewID: -1
   prViewType: 0
   __IsMine: 1
+  prOwner:
+    myNickName: 
+    actorID: 0
+    IsMasterClient: 0
   pv: {fileID: 0}
   ownerActorNr: 0
   creatorActorNr: 0

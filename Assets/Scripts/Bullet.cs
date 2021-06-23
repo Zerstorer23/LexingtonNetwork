@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using Photon.Pun;
+using Lex;
 
 public class Bullet : MonoBehaviourLex
 {

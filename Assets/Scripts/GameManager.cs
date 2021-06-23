@@ -4,6 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 using UnityEngine.UI;
 using Photon.Realtime;
+using Lex;
 
 public class GameManager : MonobehaviourLexCallbacks
 {

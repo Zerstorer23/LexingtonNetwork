@@ -1,96 +1,103 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Events;
-
-[System.Serializable]
-public class NetworkEventManager : MonobehaviourLexCallbacks
+﻿
+namespace Lex
 {
-    private static NetworkEventManager prNetEvMan;
+    using System;
+    using System.Collections.Generic;
+    using UnityEngine;
+    using UnityEngine.Events;
 
-    public static NetworkEventManager instance
+    [System.Serializable]
+    public class NetworkEventManager : MonobehaviourLexCallbacks
     {
-        get
+        private static NetworkEventManager prNetEvMan;
+
+        public static NetworkEventManager instance
         {
-            if (!prNetEvMan)
+            get
             {
-                prNetEvMan = FindObjectOfType<NetworkEventManager>();
                 if (!prNetEvMan)
                 {
+                    prNetEvMan = FindObjectOfType<NetworkEventManager>();
+                    if (!prNetEvMan)
+                    {
+                    }
+                    else
+                    {
+                        prNetEvMan.Init();
+                    }
                 }
-                else
-                {
-                    prNetEvMan.Init();
-                }
+
+                return prNetEvMan;
             }
-
-            return prNetEvMan;
         }
-    }
 
-    private Dictionary<LexCallback, NetEvent> eventDictionary;
+        private Dictionary<LexCallback, NetEvent> eventDictionary;
 
-    void Init() {
-
-        if (eventDictionary == null)
+        void Init()
         {
-            eventDictionary = new Dictionary<LexCallback, NetEvent>();
+
+            if (eventDictionary == null)
+            {
+                eventDictionary = new Dictionary<LexCallback, NetEvent>();
+            }
         }
-    }
 
 
-    public NetEvent GetEvent(LexCallback eventID) {
-
-        NetEvent thisEvent;
-        eventDictionary.TryGetValue(eventID, out thisEvent);
-        return thisEvent;
-//       bool found= eventDictionary.TryGetValue(eventName,out thisEvent);
-
-    }
-
-    public static void StartListening(LexCallback eventID, UnityAction<NetEventObject> listener)
-    {
-        if (instance == null) return;
-        NetEvent thisEvent = instance.GetEvent(eventID);
-        if (thisEvent != null)
+        public NetEvent GetEvent(LexCallback eventID)
         {
-            thisEvent.AddListener(listener);
-        }
-        else
-        {
-            thisEvent = new NetEvent();
-            thisEvent.AddListener(listener); 
-            instance.eventDictionary.Add(eventID, thisEvent);
-        }
-    }
 
-    public static void StopListening(LexCallback eventID, UnityAction<NetEventObject> listener)
-    {
-        if (instance == null) return;
-        NetEvent thisEvent = instance.GetEvent(eventID);
-        if (thisEvent != null)
-        {
-            thisEvent.RemoveListener(listener);
-        }
-    }
+            NetEvent thisEvent;
+            eventDictionary.TryGetValue(eventID, out thisEvent);
+            return thisEvent;
+            //       bool found= eventDictionary.TryGetValue(eventName,out thisEvent);
 
-    public static bool TriggerEvent(LexCallback eventID, NetEventObject variable)
-    {
-        if (instance == null) {
-            Debug.LogWarning("On Destroy no EventManager.");
+        }
+
+        public static void StartListening(LexCallback eventID, UnityAction<NetEventObject> listener)
+        {
+            if (instance == null) return;
+            NetEvent thisEvent = instance.GetEvent(eventID);
+            if (thisEvent != null)
+            {
+                thisEvent.AddListener(listener);
+            }
+            else
+            {
+                thisEvent = new NetEvent();
+                thisEvent.AddListener(listener);
+                instance.eventDictionary.Add(eventID, thisEvent);
+            }
+        }
+
+        public static void StopListening(LexCallback eventID, UnityAction<NetEventObject> listener)
+        {
+            if (instance == null) return;
+            NetEvent thisEvent = instance.GetEvent(eventID);
+            if (thisEvent != null)
+            {
+                thisEvent.RemoveListener(listener);
+            }
+        }
+
+        public static bool TriggerEvent(LexCallback eventID, NetEventObject variable)
+        {
+            if (instance == null)
+            {
+                Debug.LogWarning("On Destroy no EventManager.");
+                return false;
+            }
+            NetEvent thisEvent = instance.GetEvent(eventID);
+            if (thisEvent != null)
+            {
+                thisEvent.Invoke(variable);
+                return true;
+            }
             return false;
         }
-        NetEvent thisEvent =  instance.GetEvent(eventID);
-        if (thisEvent != null)
-        {
-            thisEvent.Invoke(variable);
-            return true;
-        }
-        return false;
+
     }
 
+
+
+
 }
-
-
-
-

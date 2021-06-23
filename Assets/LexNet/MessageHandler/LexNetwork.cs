@@ -1,63 +1,38 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using System;
-using static LexNetwork_MessageHandler;
-using System.Linq;
-using Photon.Pun;
-using Photon.Realtime;
-
+﻿
+//#undef USE_LEX
+namespace Lex
+{
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
+    using System.IO;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
+    using System;
+    using static LexNetwork_MessageHandler;
+    using System.Linq;
+    using Photon.Pun;
+    using Photon.Realtime;
     public partial class LexNetwork : MonobehaviourLexCallbacks
     {
+#if USE_LEX
         public static bool useLexNet = true;
+#else
+        public static bool useLexNet = false;
+#endif
         public static bool debugLexNet = false;
         public static readonly int MAX_VIEW_IDS = 10000;
 
         public static string ServerAddress;
         public static bool connected;
-        public static int countOfPlayersInRoom;
 
         public static LexNetworkConnection networkConnector = new LexNetworkConnection();
         private static LexNetwork prNetwork;
         [SerializeField] [ReadOnly] bool amMaster;
         [SerializeField] [ReadOnly] int myActorID;
-        [SerializeField] LexPlayer[] players;
-    [SerializeField] public SerializeDictionary<string,string> dict = new SerializeDictionary<string, string>();
-    public static string NickName { get; private set; }
-        public static double NetTime { get; private set; }
-        public static bool IsConnected { get; private set; }
-        public static bool IsMasterClient { get; private set; }
-        public static LexPlayer[] PlayerList { get { return GetPlayerList(); } }
-        public static LexPlayer[] PlayerListOthers { get { return GetPlayerListOthers(); } }
-        public static int PlayerCount { get { return GetPlayerCount(); } }
 
-    [SerializeField] LexPlayer prLocalPlayer;
-        public static LexPlayer LocalPlayer { get { return instance.prLocalPlayer; }
-        private set { instance.prLocalPlayer = value; }
-    }
-
-        public static T GetLocalPlayer<T>()
-        {
-            return (useLexNet) ? (T)(object)LocalPlayer : (T)(object)PhotonNetwork.LocalPlayer;
-        }
-        public static T GetMasterClient<T>()
-        {
-            return (useLexNet) ? (T)(object)MasterClient : (T)(object)PhotonNetwork.MasterClient;
-        }
-        public static T[] GetPlayerList<T>()
-        {
-            return (useLexNet) ? (T[])(object)PlayerList : (T[])(object)PhotonNetwork.PlayerList;
-        }
-        public static T[] GetPlayerListOthers<T>()
-        {
-            return (useLexNet) ? (T[])(object)PlayerListOthers : (T[])(object)PhotonNetwork.PlayerListOthers;
-        }
-
-        public static LexPlayer MasterClient { get; private set; }
+       
         public static LexHashTable CustomProperties { get; private set; } = new LexHashTable();
 
         public static LexNetwork instance
@@ -80,18 +55,18 @@ using Photon.Realtime;
             }
         }
 
-        public static void DestroyPlayerObjects(int playerID, bool localOnly = false)
+        public static void DestroyPlayerObjects(string playerID, bool localOnly = false)
         {
             if (!useLexNet)
             {
-                PhotonNetwork.DestroyPlayerObjects(playerID, localOnly);
+                PhotonNetwork.DestroyPlayerObjects(GetPlayerByID(playerID).actorID, localOnly);
                 return;
             }
             var viewList = LexViewManager.GetViewList();
             foreach (var view in viewList)
             {
                 if (view.IsRoomView || view.IsSceneView) continue;
-                if (view.creatorActorNr == playerID)
+                if (view.Owner.uid == playerID)
                 {
                     if (localOnly)
                     {
@@ -127,8 +102,19 @@ using Photon.Realtime;
                 }
             }
         }
+        bool init = false;
         private void Init()
         {
+            if (init) return;
+            init = true;
+            playerDictionary.Clear();
+            Player[] players = PhotonNetwork.PlayerList;
+            foreach (Player p in players)
+            {
+                LexPlayer uPlayer = new LexPlayer(p);
+                playerDictionary.Add(p.UserId, uPlayer);
+            }
+            Debug.Log("<color=#00ff00>Conn man : current size</color> " + playerDictionary.Count);
         }
 
 
@@ -170,7 +156,7 @@ using Photon.Realtime;
                 return;
             }
             DestroyAll();
-            playerDictionary = new Dictionary<int, LexPlayer>();
+            playerDictionary.Clear();
             instance.SetConnected(false);
             networkConnector.Disconnect();
         }
@@ -195,7 +181,7 @@ using Photon.Realtime;
             return false;
         }
 
-        #region instantiation
+#region instantiation
         public static GameObject Instantiate(string prefabName, Vector3 position, Quaternion quaternion, byte group = 0, object[] parameters = null)
         {
 
@@ -228,16 +214,17 @@ using Photon.Realtime;
             instance.Instantiate_Send(lv.ViewID, LocalPlayer.actorID, prefabName, position, quaternion, parameters);
             return go;
         }
-        #endregion
+#endregion
         public static int GetPing()
         {
             if (!useLexNet)
             {   //NOTE object not need parse
                 return PhotonNetwork.GetPing();
             }
-        if (!IsConnected) {
-            return 0;
-        }
+            if (!IsConnected)
+            {
+                return 0;
+            }
             if (NetTime > instance.lastReceivedPing + instance.pingPeriodInSec)
             {
                 instance.SendPing();
@@ -368,7 +355,7 @@ using Photon.Realtime;
         {
             if (!useLexNet)
             {
-                PhotonNetwork.CurrentRoom.SetCustomProperties(hash.phash);
+                PhotonNetwork.CurrentRoom.SetCustomProperties(hash.ToPhotonHash());
                 return;
             }
             CustomProperties.UpdateProperties(hash);
@@ -387,13 +374,27 @@ using Photon.Realtime;
         }
 
 
+        [LexRPC]
+        public void SetBotProperty(string uid, int key, string typename, object value)
+        {
+            var player = GetPlayerByID(uid);
+            if (player == null) return;
+            if (useLexNet)
+            {
+                object data = ParserAParameter(typename, (string)value);
+                player.ReceiveBotProperty(key, value);
+            }
+            else {
+                player.ReceiveBotProperty(key, value);
+            }
+        }
 
-    private void Awake()
-    {
-      //  dict.Add("Hi", "A");
-       // Debug.Log(dict["Hi"]);
-    }
-    private void Update()
+        private void Awake()
+        {
+            //  dict.Add("Hi", "A");
+            // Debug.Log(dict["Hi"]);
+        }
+        private void Update()
         {
             NetTime += Time.deltaTime;
             networkConnector.DequeueReceivedBuffer();
@@ -408,15 +409,11 @@ using Photon.Realtime;
                 players = GetPlayerList();
             }
         }
+        public LexPlayer[] players;
         private void OnApplicationQuit()
         {
             LexNetwork.Disconnect();
         }
     }
-/*
- [Serializable]
-public class SerializeDicString : SerializeDictionary<string, string> { }
 
-public SerializeDicString dicString = new SerializeDicString();
- */
-//Raycast
+}

@@ -1,25 +1,31 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class LexNetwork_HashSettings 
+﻿namespace Lex
 {
- public  Dictionary<RoomProperty, string> RoomHash { get; private set; }
+    using System.Collections;
+    using System.Collections.Generic;
+    using UnityEngine;
 
-   public LexNetwork_HashSettings() {
-        RoomHash = new Dictionary<RoomProperty, string>();   
-    }
+    public class LexNetwork_HashSettings
+    {
+        public Dictionary<RoomProperty, string> RoomHash { get; private set; }
 
-    public object GetRoomSetting(RoomProperty key, string defaultValue) {
-        if (!RoomHash.ContainsKey(key))
+        public LexNetwork_HashSettings()
         {
-            RoomHash.Add(key, defaultValue);
+            RoomHash = new Dictionary<RoomProperty, string>();
         }
-        return RoomHash[key];
+
+        public object GetRoomSetting(RoomProperty key, string defaultValue)
+        {
+            if (!RoomHash.ContainsKey(key))
+            {
+                RoomHash.Add(key, defaultValue);
+            }
+            return RoomHash[key];
+        }
+        public void SetRoomSetting(LexHashTable hash)
+        {
+
+
+        }
+
     }
-    public void SetRoomSetting(LexHashTable hash) {
-
-
-    }
-
 }
