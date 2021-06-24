@@ -61,7 +61,7 @@
         {
             string nextMaster = (netMessage.GetNext());
             LexPlayer player = LexNetwork.GetPlayerByID(nextMaster);
-            LexNetwork.instance.SetMasterClient_Receive(sentActorNumber.ToString(), nextMaster);
+            LexNetwork.SetMasterClient_Receive(sentActorNumber.ToString(), nextMaster);
             NetworkEventManager.TriggerEvent(LexCallback.MasterClientChanged, new NetEventObject() { objData = player });
         }
 
@@ -71,7 +71,7 @@
             //local destroy all rpc and obj
             string disconnActor = (netMessage.GetNext());
             LexPlayer player = LexNetwork.GetPlayerByID(disconnActor);
-            LexNetwork.instance.RemovePlayerFromDictionary(disconnActor);
+            LexNetwork.RemovePlayerFromDictionary(disconnActor);
             LexNetwork.DestroyPlayerObjects(disconnActor, true);
             NetworkEventManager.TriggerEvent(LexCallback.PlayerDisconnected, new NetEventObject() { objData = player });
         }
@@ -79,7 +79,7 @@
         private void Handle_Receive_PlayerJoin(LexNetworkMessage netMessage)
         {
             LexPlayer player = new LexPlayer(false, netMessage);
-            LexNetwork.instance.AddPlayerToDictionary(player);
+            LexNetwork.AddPlayerToDictionary(player);
             NetworkEventManager.TriggerEvent(LexCallback.PlayerJoined, new NetEventObject() { objData = player });
         }
 
@@ -140,7 +140,7 @@
                 {
                     LexNetwork.instance.SetLocalPlayer(player);
                 }
-                LexNetwork.instance.AddPlayerToDictionary(player);
+                LexNetwork.AddPlayerToDictionary(player);
             }
             long serverTime = long.Parse(netMessage.GetNext());
             LexNetwork.instance.InitServerTime(serverTime);

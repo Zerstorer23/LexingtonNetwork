@@ -17,6 +17,7 @@ public class Bullet : MonoBehaviourLex
     }
     private void OnEnable()
     {
+        if(lexView.IsMine)
         StartCoroutine(destroyBullet());
     }
     private void Update()
@@ -45,6 +46,7 @@ public class Bullet : MonoBehaviourLex
                 target.GetComponent<HurtEffect>().GotHit();
 
             }
+
             LexNetwork.Destroy(lexView);
 
         }

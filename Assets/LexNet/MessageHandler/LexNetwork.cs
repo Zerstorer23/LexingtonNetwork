@@ -47,10 +47,7 @@ namespace Lex
                     {
                         Debug.LogWarning("There needs to be one active LexNetwork script on a GameObject in your scene.");
                     }
-                    else
-                    {
-                        prNetwork.Init();
-                    }
+
                 }
                 return prNetwork;
             }
@@ -103,21 +100,6 @@ namespace Lex
                 }
             }
         }
-        bool init = false;
-        private void Init()
-        {
-            if (init) return;
-            init = true;
-            playerDictionary.Clear();
-            Player[] players = PhotonNetwork.PlayerList;
-            foreach (Player p in players)
-            {
-                LexPlayer uPlayer = new LexPlayer(p);
-                AddPlayerToDictionary(uPlayer);
-            }
-            Debug.Log("<color=#00ff00>Conn man : current size</color> " + playerDictionary.Count);
-        }
-
 
         public static bool ConnectUsingSettings()
         {
@@ -264,6 +246,7 @@ namespace Lex
         {
             if (!useLexNet)
             {   //NOTE object not need parse
+                
                 PhotonNetwork.Destroy(lv.Pv);
                 return;
             }
@@ -346,6 +329,10 @@ namespace Lex
 
         public static void SendChat(string chatMessage)
         {
+            if (!useLexNet) {
+                Debug.Log(chatMessage);
+                return;
+            }
             chatMessage = chatMessage.Replace(NET_DELIM, " ");
             LexNetworkMessage netMessage = new LexNetworkMessage(LocalPlayer.actorID, (int)MessageInfo.Chat, chatMessage);
             LexChatManager.AddChat(chatMessage);
@@ -413,7 +400,6 @@ namespace Lex
             }
         }
         public LexPlayer[] players;
-        LexRPC
         private void OnApplicationQuit()
         {
             LexNetwork.Disconnect();

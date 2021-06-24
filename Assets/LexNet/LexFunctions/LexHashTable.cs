@@ -11,13 +11,14 @@
     public class LexHashTable
     {
         public Dictionary<int, object> lexHash = new Dictionary<int, object>();
+        public ExitGames.Client.Photon.Hashtable phash;
         public object this[int i]
         {
-            get { return (LexNetwork.useLexNet)?lexHash[i] : owner.pPlayer.CustomProperties[i]; }
+            get { return (LexNetwork.useLexNet)?lexHash[i] : owner.pPlayer.CustomProperties[i.ToString()]; }
         }
         public object this[object i]
         {
-            get { return (LexNetwork.useLexNet) ? lexHash[(int)i] : owner.pPlayer.CustomProperties[(int)i]; }
+            get { return (LexNetwork.useLexNet) ? lexHash[(int)i] : owner.pPlayer.CustomProperties[((int)i).ToString()]; }
         }
         LexPlayer owner = null;
         public LexHashTable()
@@ -30,9 +31,10 @@
         }
         public LexHashTable(ExitGames.Client.Photon.Hashtable phash)
         {
+            lexHash.Clear();
             foreach (var entry in phash)
             {
-                lexHash.Add((int)entry.Key, entry.Value);
+                lexHash.Add(Int32.Parse(entry.Key.ToString()), entry.Value);
             }
         }
         public ExitGames.Client.Photon.Hashtable ToPhotonHash()
@@ -40,7 +42,8 @@
             var pHash = new ExitGames.Client.Photon.Hashtable();
             foreach (var entry in lexHash)
             {
-                pHash.Add(entry.Key, entry.Value);
+                pHash.Add(((int)entry.Key).ToString(), entry.Value);
+                Debug.Log(entry.Key);
             }
             return pHash;
         }
@@ -49,14 +52,7 @@
         public void Add(object key, object value) => Add((int)key, value);
         public void Add(int key, object value)
         {
-            if (!LexNetwork.useLexNet)
-            {
-                //    phash.Add(key, value);
-            }
-            else
-            {
-                lexHash.Add(key, value);
-            }
+            lexHash.Add(key, value);
         }
 
         public T Get<T>(object key, T value) => Get((int)key, value);

@@ -15,7 +15,7 @@
         public string uid;
         public LexPlayer Owner
         {
-            get { return prOwner; }
+            get { return (LexNetwork.useLexNet)? prOwner: LexNetwork.GetPlayerByID(Pv.Owner.UserId); }
             private set { prOwner = value; }
         }
         
@@ -140,11 +140,13 @@
             //3. 수정을 아예 안한 오브젝트는 플레이시 유지되지
             // ->수정을 막는다.
             // 
-            Pv = GetComponent<PhotonView>();
+            if (!LexNetwork.useLexNet) {
+                Pv = GetComponent<PhotonView>();
+                Debug.Assert(Pv != null, gameObject.name);
+            }
             serializedView = GetComponent<MonobehaviourLexSerialised>();//TODO 여러개일수 있음
             RefreshRpcMonoBehaviourCache();
             if (serializedView) serializedView.UpdateOwnership(); //SceneView case
-            Debug.Log("LV awake " + serializedView);
         }
         private void Start()
         {
@@ -192,7 +194,6 @@
             }
             if (serializedView) serializedView.UpdateOwnership();
             LexViewManager.AddViewtoDictionary(this);
-            Debug.LogWarning("View id set " + ViewID);
         }
         public void UpdateOwnership()
         {

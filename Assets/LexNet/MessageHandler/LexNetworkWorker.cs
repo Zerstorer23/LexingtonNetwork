@@ -12,8 +12,8 @@ namespace Lex
     public partial class LexNetwork
     {
 
-        private static Dictionary<string, LexPlayer> playerDictionary = new Dictionary<string, LexPlayer>();
-        private Mutex playerDictionaryMutex = new Mutex();
+        internal static Dictionary<string, LexPlayer> playerDictionary = new Dictionary<string, LexPlayer>();
+        private static Mutex playerDictionaryMutex = new Mutex();
         public LexNetwork_TimeHandler timeHandler = new LexNetwork_TimeHandler();
 
         private static LexPlayer[] GetPlayerList()
@@ -48,23 +48,22 @@ namespace Lex
             //    playerDictionary.Add(player.actorID, player);
         }
 
-        public void AddPlayerToDictionary(LexPlayer player)
+        internal static void AddPlayerToDictionary(LexPlayer player)
         {
             playerDictionaryMutex.WaitOne();
             playerDictionary.Add(player.uid, player);
             Debug.LogWarning("Add player " + player.uid);
+            if (player.IsLocal) {
+                LocalPlayer = player;
+            }
             if (player.IsMasterClient)
             {
-                LexNetwork.instance.SetMasterClient_Receive(player.uid, player.uid);
-
+                SetMasterClient_Receive(player.uid, player.uid);
                 // MasterClient = player;
-            }
-            if (player.IsLocal) {
-                LexNetwork.LocalPlayer = player;
             }
             playerDictionaryMutex.ReleaseMutex();
         }
-        public void RemovePlayerFromDictionary(string actorID)
+        internal static void RemovePlayerFromDictionary(string actorID)
         {
             playerDictionaryMutex.WaitOne();
 
@@ -151,18 +150,20 @@ namespace Lex
             }
             //Mutex
         }
-        public void SetMasterClient_Receive(string sentActorNumber, string nextMaster)
+        internal static void SetMasterClient_Receive(string sentUID, string nextMaster)
         {
             //지금마스터 해제
             //새 마스터 등록
             //view아이디 owner정보 변경
-            if (playerDictionary.ContainsKey(sentActorNumber))
+            if (playerDictionary.ContainsKey(sentUID))
             {
-                playerDictionary[sentActorNumber].IsMasterClient = false;
+                playerDictionary[sentUID].IsMasterClient = false;
             }
             playerDictionary[nextMaster].IsMasterClient = true;
             MasterClient = playerDictionary[nextMaster];
-            if (nextMaster == LocalPlayer.uid)
+            Debug.LogWarning(LocalPlayer);
+            Debug.LogWarning(MasterClient);
+            if (LocalPlayer !=null && nextMaster == LocalPlayer.uid)
             {
                 IsMasterClient = true;
             }

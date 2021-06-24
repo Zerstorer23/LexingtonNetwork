@@ -29,18 +29,18 @@ namespace Lex
         public static LexPlayer[] PlayerListOthers { get { return GetPlayerListOthers(); } }
         public static int PlayerCount { get { return GetPlayerCount(); } }
 
-        public static LexPlayer MasterClient { get { return useLexNet ? prMaster : new LexPlayer(PhotonNetwork.MasterClient); } private set { prMaster = value; } }
-        public static LexPlayer LocalPlayer { get { return useLexNet ? prLocal : new LexPlayer(PhotonNetwork.LocalPlayer); } private set { prLocal = value; } }
+        public static LexPlayer MasterClient { get; private set; }//{ get { return useLexNet ? prMaster : prMaster == null ? null : GetPlayerByID(prMaster.uid); } private set { prMaster = value; } }
+        public static LexPlayer LocalPlayer { get; private set; }//{ get { return useLexNet ? prLocal : prLocal == null ? null : GetPlayerByID(prLocal.uid); } private set { prLocal = value; } }
 
         internal static void AddBotPlayer(LexPlayer botPlayer)
         {
-            playerDictionary.Add(botPlayer.uid, botPlayer);
+            AddPlayerToDictionary(botPlayer);
         }
         public static void RemoveBotPlayer(string uid)
         {
             if (playerDictionary.ContainsKey(uid))
             {
-                playerDictionary.Remove(uid);
+                RemovePlayerFromDictionary(uid);
             }
         }
 
@@ -80,7 +80,6 @@ namespace Lex
         }
         internal static SortedDictionary<string, int> GetIndexMap(LexPlayer[] players, bool useRandom = false)
         {
-            instance.Init();
             SortedDictionary<string, string> decodeMap = new SortedDictionary<string, string>();
             foreach (LexPlayer p in players)
             {
@@ -136,37 +135,8 @@ namespace Lex
             }
         }
 
-        public override void OnPlayerEnteredRoom(LexPlayer newPlayer)
-        {
-            if (!playerDictionary.ContainsKey(newPlayer.uid))
-            {
-                playerDictionary.Add(newPlayer.uid, newPlayer);
-                Debug.Log("<color=#00ff00> Addplayer </color> " + playerDictionary.Count);
-            }
-        }
-        public override void OnPlayerLeftRoom(LexPlayer newPlayer)
-        {
-            if (playerDictionary.ContainsKey(newPlayer.uid))
-            {
-                playerDictionary.Remove(newPlayer.uid);
-                Debug.Log("<color=#00ff00> removePlayer </color> " + playerDictionary.Count);
-            }
-            // EventManager.TriggerEvent(MyEvents.EVENT_PLAYER_LEFT, new EventObject(newPlayer.UserId));
-        }
-
-        public override void OnJoinedRoom()
-        {
-            if (!useLexNet) {
-                var playerList = PhotonNetwork.PlayerList;
-                foreach (var p in playerList) {
-                    LexPlayer lp = new LexPlayer(p);
-                    playerDictionary.Add(lp.uid, lp);
-                }
-            }
-        }
         public static LexPlayer GetPlayerByID(string id)
         {
-            instance.Init();
             if (id == null) return null;
             if (playerDictionary.ContainsKey(id))
             {
@@ -178,7 +148,9 @@ namespace Lex
                 return null;
             }
         }
-
+        public static bool ContainsPlayer(string id) {
+            return playerDictionary.ContainsKey(id);        
+        }
    
 
     }

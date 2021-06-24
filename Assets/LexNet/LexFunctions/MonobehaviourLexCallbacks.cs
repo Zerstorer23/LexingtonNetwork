@@ -8,13 +8,8 @@
     using UnityEngine;
 
     public class MonobehaviourLexCallbacks :
-#if USE_LEX
         MonoBehaviourLex
-#else
-        MonoBehaviourPunCallbacks
-#endif
     {
-#if USE_LEX
         private void OnEnable()
         {
             NetworkEventManager.StartListening(LexCallback.PlayerDisconnected, OnPlayerDisconnected);
@@ -30,7 +25,7 @@
             NetworkEventManager.StopListening(LexCallback.PlayerJoined, OnPlayerConnected);
             NetworkEventManager.StopListening(LexCallback.OnLocalPlayerJoined, OnLocalPlayerJoined);
             NetworkEventManager.StopListening(LexCallback.MasterClientChanged, OnMasterChanged);
-            NetworkEventManager.StopListening(LexCallback.MasterClientChanged, OnMasterChanged);
+            NetworkEventManager.StopListening(LexCallback.Disconnected, OnDisconnected);
             NetworkEventManager.StopListening(LexCallback.HashChanged, OnHashChanged);
         }
         private void OnDisconnected(NetEventObject arg0)
@@ -51,7 +46,7 @@
                 OnPlayerSettingsChanged(LexNetwork.GetPlayerByID(target), hashChanged);
             }
         }
-           private void OnMasterChanged(NetEventObject arg0)
+        private void OnMasterChanged(NetEventObject arg0)
         {
             OnMasterChanged(arg0.intObj);
         }
@@ -67,43 +62,6 @@
         {
             OnJoinedRoom();
         }
-
-#else
-        public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable propertiesThatChanged)
-        {
-            OnRoomSettingsChanged(new LexHashTable(propertiesThatChanged));
-        }
-        public override void OnDisconnected(DisconnectCause cause)
-        {
-            OnDisconnected();
-        }
-        public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
-        {
-            LexPlayer player = LexNetwork.GetPlayerByID(targetPlayer.UserId);
-            OnPlayerSettingsChanged(player, new LexHashTable(changedProps));
-        }
-        public override void OnMasterClientSwitched(Player newMasterClient)
-        {
-            LexPlayer player = LexNetwork.GetPlayerByID(newMasterClient.UserId);
-            OnMasterChanged(player.actorID);
-        }
-        public override void OnPlayerEnteredRoom(Player newPlayer)
-        {
-            LexPlayer player = new LexPlayer(newPlayer);// LexNetwork.GetPlayerByID(newPlayer.UserId);
-            LexNetwork.instance.AddPlayerToDictionary(player);
-            OnPlayerEnteredRoom(player);
-        }
-        public override void OnPlayerLeftRoom(Player otherPlayer)
-        {
-            LexPlayer player = LexNetwork.GetPlayerByID(otherPlayer.UserId);
-            LexNetwork.instance.RemovePlayerFromDictionary(player.uid);
-            OnPlayerLeftRoom(player);
-        }
-        public override void OnJoinedRoom()
-        {
-            OnLocalPlayerJoined();
-        }
-#endif
 
         public virtual void OnDisconnected()
         {
@@ -132,12 +90,10 @@
         {
 
         }
-        public virtual void OnLocalPlayerJoined()
+        public virtual void OnJoinedRoom()
         {
 
         }
-
-
-    }
+}
 
 }

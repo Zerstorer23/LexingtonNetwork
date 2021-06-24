@@ -41,7 +41,6 @@ public class CowBoy : MonobehaviourLexSerialised
         }
         else {
             playerNameText.text = lexView.Owner.NickName+ lexView.Owner.CustomProperties[PlayerProperty.Team];
-                ;
             playerNameText.color = Color.red;
         }
         rigidBody = GetComponent<Rigidbody2D>();
@@ -114,7 +113,14 @@ public class CowBoy : MonobehaviourLexSerialised
         sprite.flipX = enable;
     }
 
-
+/*    private void FixedUpdate()
+    {
+        if (!lexView.IsMine) return;
+        LexHashTable hash = new LexHashTable();
+        hash.Add(PlayerProperty.Seed, UnityEngine.Random.Range(0, 5));
+        lexView.Owner.SetCustomProperties(hash);
+        Debug.Log(lexView.Owner.CustomProperties[(int)PlayerProperty.Seed]);
+    }*/
     void Shoot(bool enable) {
         animator.SetBool("IsShot", enable);
         canMove = !enable;
@@ -168,6 +174,19 @@ public class CowBoy : MonobehaviourLexSerialised
         {
             Vector3 pos = (Vector3)parameters[0];
             transform.position = pos;
+        }
+    }
+    public override void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (isWriting)
+        {
+            if (transform.position == oldPos) return;
+            stream.SendNext(transform.position);
+            oldPos = transform.position;
+        }
+        else
+        {
+            transform.position = (Vector3)stream.ReceiveNext(); 
         }
     }
 }

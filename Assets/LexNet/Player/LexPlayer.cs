@@ -139,21 +139,7 @@
             }
         }
 
-        public LexPlayer(Player player)
-        {
-            controllerType = ControllerType.Human;
-            this.pPlayer = player;
-            this.IsMasterClient = player.IsMasterClient;
-            this.IsLocal = player.IsLocal;
-            CustomProperties = new LexHashTable(this);
-        }
-        public LexPlayer(string uid)
-        {
-            controllerType = ControllerType.Bot;
-            this.botID = uid;
-            NickName = botNames[UnityEngine.Random.Range(0, botNames.Length)];
-            CustomProperties = new LexHashTable(this);
-        }
+
 
         public T GetProperty<T>(object key) => GetProperty<T>((int)key);
         public T GetProperty<T>(object key, T value) => GetProperty((int)key,value);
@@ -186,6 +172,7 @@
                 }
                 else
                 {
+                    Debug.LogWarning(pPlayer);
                     pPlayer.SetCustomProperties(lexHash.ToPhotonHash());
                 }
             }
@@ -199,7 +186,7 @@
                         LexNetwork.instance.lexView.RPC("SetBotProperty",RpcTarget.AllBuffered,uid,entry.Key,entry.GetType().Name,entry.Value);
 #else
 
-                        LexNetwork.instance.photonView.RPC("SetBotProperty", RpcTarget.AllBuffered, uid, entry.Key, entry.GetType().Name, entry.Value);
+                        LexNetwork.instance.GetComponent<PhotonView>().RPC("SetBotProperty", RpcTarget.AllBuffered, uid, entry.Key, entry.GetType().Name, entry.Value);
 #endif
                     }
                 }
@@ -230,6 +217,7 @@
             this.actorID = Int32.Parse(netMessage.GetNext());
             this.IsMasterClient = netMessage.GetNext() == "1";
             int numHash = Int32.Parse(netMessage.GetNext());
+            controllerType = ControllerType.Human;
             Debug.Log(string.Format("Received Player {0}, isMaster{1}", actorID, IsMasterClient));
             for (int i = 0; i < numHash; i++)
             {
@@ -239,7 +227,33 @@
                 CustomProperties.Add(key, value);
             }
         }
+        public LexPlayer(Player player)
+        {
+            controllerType = ControllerType.Human;
+            this.pPlayer = player;
+            Debug.LogWarning("PLauyer " + player);
+            controllerType = ControllerType.Human;
+            this.IsMasterClient = player.IsMasterClient;
+            this.IsLocal = player.IsLocal;
+            CustomProperties = new LexHashTable(this);
+        }
+        public LexPlayer(string uid)
+        {
+            controllerType = ControllerType.Bot;
+            this.botID = uid;
+            NickName = botNames[UnityEngine.Random.Range(0, botNames.Length)];
+            CustomProperties = new LexHashTable(this);
+        }
 
+        public LexPlayer Next() {
+            var players = LexNetwork.PlayerList;
+            int i = 0;
+            while (i < players.Length && players[i].uid != uid) {
+                i++;
+            }
+            int index = (i + 1) % players.Length;
+            return players[index];
+        }
 
 
 

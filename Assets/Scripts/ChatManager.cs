@@ -14,7 +14,7 @@ public class ChatManager :MonoBehaviour
     public void OnInputEnd() {
         LexNetwork.SendChat(chatInput.text);
         chatInput.text = "";
-    
+        
     }
  
 

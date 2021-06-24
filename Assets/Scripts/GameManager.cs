@@ -41,36 +41,7 @@ public class GameManager : MonobehaviourLexCallbacks
         LexNetwork.ConnectUsingSettings();
     }
 
-#if !USE_LEX
-    public static ExitGames.Client.Photon.Hashtable GetInitOptions()
-    {
-        var hash = new ExitGames.Client.Photon.Hashtable();
-        hash.Add(RoomProperty.GameMode, "dd");
-        hash.Add(RoomProperty.Seed, Random.Range(0, 133));
-        return hash;
-    }
-    public static void JoinRoom()
-    {
-
-        var hash = GetInitOptions();
-        RoomOptions roomOpts = new RoomOptions()
-        {
-            IsVisible = true,
-            IsOpen = true,
-            MaxPlayers = (byte)10,
-            PublishUserId = true,
-            CustomRoomProperties = hash
-        };
-        PhotonNetwork.JoinOrCreateRoom("Primary", roomOpts, TypedLobby.Default);
-
-    }
-    public override void OnConnectedToMaster()
-    {
-        Debug.Log("Connected to master");
-        JoinRoom();
-    }
-#endif
-    public override void OnLocalPlayerJoined()
+    public override void OnJoinedRoom()
     {
         AssignTeam();
         respawnButton.gameObject.SetActive(true);
@@ -126,7 +97,9 @@ public class GameManager : MonobehaviourLexCallbacks
             respawnPanel.SetActive(false);
             startCountDown = false;
             RelocatePlayer();
-           LocalPlayer.GetComponent<LexView>().RPC("Resurrect", RpcTarget.AllBuffered);
+            if (lexView.IsMine) {
+                LocalPlayer.GetComponent<LexView>().RPC("Resurrect", RpcTarget.AllBuffered);
+            }
         }
     }
 

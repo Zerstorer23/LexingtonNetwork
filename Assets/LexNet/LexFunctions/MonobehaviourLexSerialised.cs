@@ -25,10 +25,12 @@ namespace Lex
         public abstract void OnSyncView(params object[] parameters);
         protected void WriteSync()
         {
+#if USE_LEX
             if (isWriting)
             {
                 OnSyncView(null);
             }
+#endif
         }
 
         public void PushSync(params object[] parameters)
